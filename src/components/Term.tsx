@@ -69,7 +69,7 @@ export default function Term(props : TermProps) {
             case "newTab":
                 props.onNewTab?.();
                 break;
-            case "openConfig":
+            case "openConfigFile":
                 openConfigFile().then();
                 break;
         }
@@ -128,7 +128,7 @@ export default function Term(props : TermProps) {
         if (termRef.current) {
             observer.observe(termRef.current);
         }
-        
+
     }, [id]);
 
     return (
