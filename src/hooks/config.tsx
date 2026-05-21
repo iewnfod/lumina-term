@@ -1,7 +1,8 @@
-import {createContext, useContext, useEffect, useState} from "react";
+import {createContext, ReactNode, useContext, useEffect, useState} from "react";
 import {GlobalConfig} from "../types/config.ts";
 import {LazyStore} from "@tauri-apps/plugin-store";
 import {TerminalProfile} from "../types/terminal.ts";
+import {getCurrentWindow} from "@tauri-apps/api/window";
 
 const CONFIG_SAVE_PATH = "config.json";
 const store = new LazyStore(CONFIG_SAVE_PATH);
@@ -28,7 +29,7 @@ export function useGlobalConfig() {
     return context;
 }
 
-export function GlobalConfigProvider({ children }: { children: React.ReactNode }) {
+export function GlobalConfigProvider({ children }: { children: ReactNode }) {
     const [config, setConfig] = useState<GlobalConfig>(DEFAULT_CONFIG);
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -50,7 +51,7 @@ export function GlobalConfigProvider({ children }: { children: React.ReactNode }
         store.set("config", newConfig).then(() => {
             store.save().then();
         });
-    }
+    };
 
     const updateConfig = (newConfig: Partial<GlobalConfig>) => {
         console.log("updateConfig", newConfig);
@@ -67,8 +68,16 @@ export function GlobalConfigProvider({ children }: { children: React.ReactNode }
             const updated: GlobalConfig = {...prevState, profiles: updatedProfiles};
             saveConfig(updated);
             return updated;
-        })
-    }
+        });
+    };
+
+    useEffect(() => {
+        if (!isLoading) {
+            getCurrentWindow().show().then(() => {
+                console.log("Data loaded");
+            });
+        }
+    }, [isLoading]);
 
     return (
         <GlobalConfigContext.Provider value={{config, updateConfig, newProfile, isLoading}}>

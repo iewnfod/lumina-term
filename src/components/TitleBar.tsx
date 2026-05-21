@@ -86,7 +86,7 @@ export default function TitleBar({
         >
             <div
                 data-tauri-drag-region
-                className="w-full grow flex flex-col items-start justify-center pl-2"
+                className="w-full h-full grow flex flex-col items-start justify-center pl-2"
                 style={{
                     color: theme?.foreground ?? "white",
                 }}

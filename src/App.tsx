@@ -1,5 +1,5 @@
 import Term, {parseProfileTheme} from "./components/Term.tsx";
-import {useEffect, useMemo, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import {TerminalProfile} from "./types/terminal.ts";
 import {useGlobalConfig} from "./hooks/config.tsx";
 import WelcomePage from "./pages/WelcomePage.tsx";
@@ -20,6 +20,7 @@ function App() {
         }
     }, [currentId, terminals]);
     const [currentTheme, setCurrentTheme] = useState<ITheme | null>(null);
+    const isInitialized = useRef<boolean>(false);
 
     const newTerminal = (profile: TerminalProfile) => {
         const id = crypto.randomUUID();
@@ -34,7 +35,9 @@ function App() {
     };
 
     useEffect(() => {
+        if (isInitialized.current) return;
         if (config.profiles.length && ids.length == 0) {
+            isInitialized.current = true;
             getCurrentWindow().setResizable(true).then();
             newTerminal(config.profiles[0]);
         }
