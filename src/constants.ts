@@ -48,7 +48,7 @@ export const DEFAULT_CONFIG: GlobalConfig = {
         {
             key: ",",
             with: ["CtrlOrCommand"],
-            action: "openConfig",
+            action: "openConfigFile",
         },
     ]
 };

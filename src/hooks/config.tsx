@@ -68,7 +68,9 @@ export function GlobalConfigProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         if (!isLoading) {
-            getCurrentWindow().show().then(() => {
+            const window = getCurrentWindow();
+            window.show().then(() => {
+                window.setFocus().then();
                 console.log("Data loaded");
             });
         }

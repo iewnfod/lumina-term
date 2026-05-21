@@ -30,6 +30,7 @@
         }
       ]
     },
-    "os:default"
+    "os:default",
+    "core:window:allow-set-focus"
   ]
 }
