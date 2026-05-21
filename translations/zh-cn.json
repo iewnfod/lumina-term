@@ -1,0 +1,17 @@
+{
+    "Welcome to Lumina Term": "欢迎来到 Lumina Terminal",
+    "Choose some basic settings and create your first profile now!": "让我们进行一些基础配置并创建您的第一个配置文件！",
+    "Language": "语言",
+    "Next": "下一步",
+    "New Profile": "新建配置文件",
+    "Exe Path": "终端可执行文件",
+    "Select": "选择",
+    "Previous": "上一步",
+    "Untitled Profile": "未命名配置文件",
+    "Profile Name": "配置名",
+    "Rows": "行数",
+    "Columns": "列数",
+    "Lumina Term has prepared": "Lumina Terminal 已经准备好了 \uD83E\uDD73",
+    "Start Now": "立即体验",
+    "File not exist": "文件路径不存在"
+}
