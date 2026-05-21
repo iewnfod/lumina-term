@@ -26,4 +26,5 @@ portable-pty = "0.9.0"
 tauri-plugin-store = "2.4.3"
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
+tauri-plugin-os = "2"
 

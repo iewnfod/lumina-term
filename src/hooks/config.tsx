@@ -3,14 +3,9 @@ import {GlobalConfig} from "../types/config.ts";
 import {LazyStore} from "@tauri-apps/plugin-store";
 import {TerminalProfile} from "../types/terminal.ts";
 import {getCurrentWindow} from "@tauri-apps/api/window";
+import {CONFIG_SAVE_PATH, DEFAULT_CONFIG} from "../constants.ts";
 
-const CONFIG_SAVE_PATH = "config.json";
 const store = new LazyStore(CONFIG_SAVE_PATH);
-
-const DEFAULT_CONFIG: GlobalConfig = {
-    language: 'en-us',
-    profiles: [],
-};
 
 interface GlobalConfigContextType {
     config: GlobalConfig;

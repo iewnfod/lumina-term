@@ -1,4 +1,4 @@
-import Term, {parseProfileTheme} from "./components/Term.tsx";
+import Term from "./components/Term.tsx";
 import {useEffect, useMemo, useRef, useState} from "react";
 import {TerminalProfile} from "./types/terminal.ts";
 import {useGlobalConfig} from "./hooks/config.tsx";
@@ -6,6 +6,7 @@ import WelcomePage from "./pages/WelcomePage.tsx";
 import {getCurrentWindow} from "@tauri-apps/api/window";
 import TitleBar from "./components/TitleBar.tsx";
 import {ITheme} from "@xterm/xterm";
+import {parseProfileTheme} from "./lib/term.ts";
 
 function App() {
     const {config} = useGlobalConfig();
@@ -57,7 +58,11 @@ function App() {
                 <div className="flex flex-col items-center justify-between w-full h-full pb-1">
                     <TitleBar profile={currentProfile} theme={currentTheme}/>
                     {ids.map((id) => (
-                        <Term id={id} profile={terminals[id]} key={id}/>
+                        <Term
+                            id={id}
+                            profile={terminals[id]}
+                            key={id}
+                        />
                     ))}
                 </div>
             </div>

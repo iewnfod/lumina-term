@@ -1,56 +1,25 @@
 import {useCallback, useEffect, useMemo, useRef} from "react";
-import {ITheme, Terminal} from "@xterm/xterm";
+import {Terminal} from "@xterm/xterm";
 import {listen} from "@tauri-apps/api/event";
 import {invoke} from "@tauri-apps/api/core";
 import {TerminalProfile} from "../types/terminal.ts";
 import {FitAddon} from "@xterm/addon-fit";
 import {getCurrentWindow, LogicalSize} from "@tauri-apps/api/window";
-import {DEFAULT_TERMINAL_THEME} from "../constants.ts";
+import {parseProfilePadding, parseProfileTheme} from "../lib/term.ts";
+import {loadBindings} from "../lib/bindings.ts";
+import {Actions} from "../types/config.ts";
+import {openConfigFile} from "../lib/utils.ts";
+import {useGlobalConfig} from "../hooks/config.tsx";
 
-export function parseProfilePadding(profile: TerminalProfile) {
-    let paddingLeft = 0, paddingRight = 0, paddingTop = 0, paddingBottom = 0;
-    if (profile.padding) {
-        if (typeof profile.padding === "number") {
-            paddingLeft = profile.padding; paddingRight = profile.padding;
-            paddingTop = profile.padding; paddingBottom = profile.padding;
-        } else {
-            paddingLeft = profile.padding.left ?? 0;
-            paddingRight = profile.padding.right ?? 0;
-            paddingTop = profile.padding.top ?? 0;
-            paddingBottom = profile.padding.bottom ?? 0;
-        }
-    }
-    return {
-        left: paddingLeft,
-        right: paddingRight,
-        top: paddingTop,
-        bottom: paddingBottom,
-    };
+interface TermProps {
+    id: string;
+    profile: TerminalProfile;
+    onClose?: () => void;
+    onNewTab?: () => void;
 }
 
-export async function parseProfileTheme(profile: TerminalProfile) {
-    let theme: ITheme = DEFAULT_TERMINAL_THEME;
-    if (profile.themePath) {
-        const exists = await invoke("path_exist", {path: profile.themePath});
-        if (exists) {
-            const readTheme = await invoke<string>("read_file", {path: profile.themePath});
-            if (readTheme) {
-                try {
-                    const t = JSON.parse(readTheme);
-                    theme = {...theme, ...t};
-                } catch (e) {
-                    console.error("Failed to parse theme", e);
-                }
-            }
-        }
-    }
-    if (profile.theme) {
-        theme = {...theme, ...profile.theme};
-    }
-    return theme;
-}
-
-export default function Term({id, profile} : {id: string, profile: TerminalProfile}) {
+export default function Term(props : TermProps) {
+    const {id, profile} = props;
     const term = useRef<Terminal>(new Terminal({
         allowProposedApi: true,
         ...profile,
@@ -58,6 +27,7 @@ export default function Term({id, profile} : {id: string, profile: TerminalProfi
     const termRef = useRef<HTMLDivElement>(null);
     const isInitialized = useRef<boolean>(false);
     const padding = useMemo(() => parseProfilePadding(profile), [profile]);
+    const {config} = useGlobalConfig();
 
     const getWindowSizeFromRowsAndColumns = useCallback(() => {
         const term = new Terminal({...profile});
@@ -90,6 +60,24 @@ export default function Term({id, profile} : {id: string, profile: TerminalProfi
         const pixelHeight = Math.floor(profile.rows * charHeight) + heightOffset + padding.top + padding.bottom;
         return {width: pixelWidth, height: pixelHeight};
     }, [profile]);
+
+    const handleActions = (action: Actions) => {
+        switch (action) {
+            case "closeTab":
+                props.onClose?.();
+                break;
+            case "newTab":
+                props.onNewTab?.();
+                break;
+            case "openConfig":
+                openConfigFile().then();
+                break;
+        }
+    };
+
+    useEffect(() => {
+        loadBindings(term.current, config, handleActions);
+    }, [config]);
 
     useEffect(() => {
         if (isInitialized.current) return;
@@ -140,6 +128,7 @@ export default function Term({id, profile} : {id: string, profile: TerminalProfi
         if (termRef.current) {
             observer.observe(termRef.current);
         }
+        
     }, [id]);
 
     return (

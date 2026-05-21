@@ -21,6 +21,15 @@
     "core:window:allow-minimize",
     "core:window:allow-close",
     "core:window:allow-is-maximized",
-    "core:window:allow-show"
+    "core:window:allow-show",
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [
+        {
+          "path": "$APPDATA/**"
+        }
+      ]
+    },
+    "os:default"
   ]
 }

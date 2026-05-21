@@ -1,4 +1,5 @@
 import {ITheme} from "@xterm/xterm";
+import {GlobalConfig} from "./types/config.ts";
 
 export const DEFAULT_TERMINAL_THEME: ITheme = {
     background: "#000000",
@@ -26,4 +27,28 @@ export const DEFAULT_TERMINAL_THEME: ITheme = {
     brightMagenta: "#ff00ff",
     brightCyan: "#00ffff",
     brightWhite: "#ffffff",
+};
+
+export const CONFIG_SAVE_PATH = "config.json";
+
+export const DEFAULT_CONFIG: GlobalConfig = {
+    language: 'en-us',
+    profiles: [],
+    bindings: [
+        {
+            key: "t",
+            with: ["CtrlOrCommand"],
+            action: "newTab",
+        },
+        {
+            key: "w",
+            with: ["CtrlOrCommand"],
+            action: "closeTab",
+        },
+        {
+            key: ",",
+            with: ["CtrlOrCommand"],
+            action: "openConfig",
+        },
+    ]
 };
