@@ -268,7 +268,7 @@ function App() {
                                     profile={terminals[id]}
                                     isActive={id === currentId}
                                     onClose={() => closeTerminal(id)}
-                                    onNewTab={(profileName) => {
+                                    onNewTab={(profileName?: string) => {
                                         if (profileName) {
                                             const profile = config.profiles.find(p => p.name === profileName);
                                             if (profile) {

@@ -3,6 +3,7 @@ import {ITheme} from "@xterm/xterm";
 import {DEFAULT_TERMINAL_THEME, MACOS_PADDING_OFFSET} from "../constants.ts";
 import {invoke} from "@tauri-apps/api/core";
 import {isMacOS} from "./utils.ts";
+import {appDataDir, join} from "@tauri-apps/api/path";
 
 export function parseProfilePadding(profile: TerminalProfile) {
     let paddingLeft = 0, paddingRight = 0, paddingTop = 0, paddingBottom = 0;
@@ -36,16 +37,25 @@ export function parseProfilePadding(profile: TerminalProfile) {
 export async function parseProfileTheme(profile: TerminalProfile) {
     let theme: ITheme = DEFAULT_TERMINAL_THEME;
     if (profile.themePath) {
-        const exists = await invoke("path_exist", {path: profile.themePath});
-        if (exists) {
-            const readTheme = await invoke<string>("read_file", {path: profile.themePath});
-            if (readTheme) {
-                try {
-                    const t = JSON.parse(readTheme);
-                    theme = {...theme, ...t};
-                } catch (e) {
-                    console.error("Failed to parse theme", e);
+        const basePath = await appDataDir();
+        const fullPath = await join(basePath, profile.themePath);
+        const paths = [
+            fullPath,
+            profile.themePath,
+        ];
+        for (const path of paths) {
+            const exists = await invoke<boolean>("path_exist", {path: path});
+            if (exists) {
+                const readTheme = await invoke<string>("read_file", {path: path});
+                if (readTheme) {
+                    try {
+                        const t = JSON.parse(readTheme);
+                        theme = {...theme, ...t};
+                    } catch (e) {
+                        console.error("Failed to parse theme", e);
+                    }
                 }
+                break;
             }
         }
     }
