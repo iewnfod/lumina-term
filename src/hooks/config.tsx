@@ -78,10 +78,9 @@ export function GlobalConfigProvider({ children }: { children: ReactNode }) {
     }, [isLoading]);
 
     useEffect(() => {
-        if (isMacOS()) {
+        if (!isMacOS()) {
             const window = getCurrentWindow();
-            window.setDecorations(true).then();
-            window.setTitleBarStyle("overlay").then();
+            window.setDecorations(false).then();
         }
     }, []);
 
