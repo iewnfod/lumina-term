@@ -25,11 +25,12 @@ export function loadBindings(term: Terminal, config: GlobalConfig, onAction: (ac
                             flag = event.metaKey;
                             break;
                         case "CtrlOrCommand":
-                            if (os == "macos" || os == "ios") {
+                            if (os === "macos" || os === "ios") {
                                 flag = event.metaKey;
                             } else {
                                 flag = event.ctrlKey;
                             }
+                            break;
                     }
                 }
                 if (flag) {

@@ -37,7 +37,7 @@ function App() {
 
     useEffect(() => {
         if (isInitialized.current) return;
-        if (config.profiles.length && ids.length == 0) {
+        if (config.profiles.length && ids.length === 0) {
             isInitialized.current = true;
             getCurrentWindow().setResizable(true).then();
             newTerminal(config.profiles[0]);

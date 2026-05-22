@@ -153,7 +153,7 @@ function Step2({onNext, onPrev} : {
     }, [profile, checkCanNext]);
 
     useEffect(() => {
-        if (profile.exePath.length == 0) {
+        if (profile.exePath.length === 0) {
             setExePathExist(true);
         } else {
             invoke<boolean>("path_exist", {path: profile.exePath}).then((value) => {
@@ -331,7 +331,7 @@ export default function WelcomePage() {
                     }} onPrev={handlePrev}/>
                 </div>
                 <div className="h-full flex items-center justify-center" style={{width: `${100/totalStep}%`}}>
-                    <FinalStep onFinish={handleFinish} onPrev={handlePrev} display={step+1 == totalStep}/>
+                    <FinalStep onFinish={handleFinish} onPrev={handlePrev} display={step+1 === totalStep}/>
                 </div>
             </div>
         </div>
