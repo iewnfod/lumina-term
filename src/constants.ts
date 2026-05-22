@@ -51,6 +51,11 @@ export const DEFAULT_CONFIG: GlobalConfig = {
             with: ["CtrlOrCommand"],
             action: "openConfigFile",
         },
+        {
+            key: "P",
+            with: ["CtrlOrCommand", "shift"],
+            action: "openCommandPalette",
+        },
     ]
 };
 

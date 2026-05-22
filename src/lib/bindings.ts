@@ -12,22 +12,22 @@ export function loadBindings(term: Terminal, config: GlobalConfig, onAction: (ac
                 for (const w of binding.with) {
                     switch (w) {
                         case "ctrl":
-                            flag = event.ctrlKey;
+                            flag = flag && event.ctrlKey;
                             break;
                         case "shift":
-                            flag = event.shiftKey;
+                            flag = flag && event.shiftKey;
                             break;
                         case "alt":
-                            flag = event.altKey;
+                            flag = flag && event.altKey;
                             break;
                         case "command":
-                            flag = event.metaKey;
+                            flag = flag && event.metaKey;
                             break;
                         case "CtrlOrCommand":
                             if (isMacOS()) {
-                                flag = event.metaKey;
+                                flag = flag && event.metaKey;
                             } else {
-                                flag = event.ctrlKey;
+                                flag = flag && event.ctrlKey;
                             }
                             break;
                     }

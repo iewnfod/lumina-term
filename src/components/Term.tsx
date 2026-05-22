@@ -14,12 +14,14 @@ import {useGlobalConfig} from "../hooks/config.tsx";
 interface TermProps {
     id: string;
     profile: TerminalProfile;
+    isActive?: boolean;
     onClose?: () => void;
     onNewTab?: () => void;
+    onOpenCommandPalette?: () => void;
 }
 
 export default function Term(props : TermProps) {
-    const {id, profile} = props;
+    const {id, profile, isActive} = props;
     const term = useRef<Terminal | null>(null);
     const termRef = useRef<HTMLDivElement>(null);
     const isInitialized = useRef<boolean>(false);
@@ -69,6 +71,9 @@ export default function Term(props : TermProps) {
                 break;
             case "openConfigFile":
                 openConfigFile().then();
+                break;
+            case "openCommandPalette":
+                props.onOpenCommandPalette?.();
                 break;
         }
     };
@@ -145,6 +150,13 @@ export default function Term(props : TermProps) {
             observer.observe(termRef.current);
         }
     }, [id]);
+
+    // Auto-focus xterm when this tab becomes active
+    useEffect(() => {
+        if (isActive && term.current) {
+            term.current.focus();
+        }
+    }, [isActive]);
 
     return (
         <div className="w-full h-full overflow-hidden" style={{
