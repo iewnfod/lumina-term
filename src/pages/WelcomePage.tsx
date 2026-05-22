@@ -8,6 +8,7 @@ import {TerminalProfile} from "../types/terminal.ts";
 import {open} from "@tauri-apps/plugin-dialog";
 import {invoke} from "@tauri-apps/api/core";
 import Confetti from "react-confetti-boom";
+import {platform} from "@tauri-apps/plugin-os";
 
 function Step1({onNext} : {
     onNext: () => void;
@@ -129,10 +130,11 @@ function Step2({onNext, onPrev} : {
     };
 
     const selectExePath = async () => {
+        const os = platform();
         const exe = await open({
-            multiple: false, directory: false, filters: [
-                {name: "Executable File", extensions: ["exe", ""]}
-            ]
+            multiple: false, directory: false, filters: os === "windows" ? [
+                {name: "Executable File", extensions: ["exe"]}
+            ] : []
         });
         if (exe) {
             onExePathChange(exe);
