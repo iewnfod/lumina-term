@@ -11,10 +11,14 @@ export function parseProfilePadding(profile: TerminalProfile) {
             paddingLeft = profile.padding; paddingRight = profile.padding;
             paddingTop = profile.padding; paddingBottom = profile.padding;
         } else {
-            paddingLeft = profile.padding.left ?? 0;
-            paddingRight = profile.padding.right ?? 0;
-            paddingTop = profile.padding.top ?? 0;
-            paddingBottom = profile.padding.bottom ?? 0;
+            // x, y
+            paddingLeft = profile.padding.x ?? paddingLeft; paddingRight = profile.padding.x ?? paddingRight;
+            paddingTop = profile.padding.y ?? paddingTop; paddingBottom = profile.padding.y ?? paddingBottom;
+            // left, right, top, bottom
+            paddingLeft = profile.padding.left ?? paddingLeft;
+            paddingRight = profile.padding.right ?? paddingRight;
+            paddingTop = profile.padding.top ?? paddingTop;
+            paddingBottom = profile.padding.bottom ?? paddingBottom;
         }
     }
     if (isMacOS()) {

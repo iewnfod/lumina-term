@@ -4,6 +4,6 @@ export interface TerminalProfile extends ITerminalOptions {
     name: string;
     exePath: string;
     cols: number; rows: number;
-    padding?: number | {left?: number, right?: number, top?: number, bottom?: number};
+    padding?: number | {x?: number, y?: number, left?: number, right?: number, top?: number, bottom?: number};
     themePath?: string;
 }

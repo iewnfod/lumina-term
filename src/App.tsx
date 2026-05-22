@@ -5,8 +5,10 @@ import {useGlobalConfig} from "./hooks/config.tsx";
 import WelcomePage from "./pages/WelcomePage.tsx";
 import {getCurrentWindow} from "@tauri-apps/api/window";
 import TitleBar from "./components/TitleBar.tsx";
+import TabBar from "./components/TabBar.tsx";
 import {ITheme} from "@xterm/xterm";
 import {parseProfileTheme} from "./lib/term.ts";
+import {invoke} from "@tauri-apps/api/core";
 
 function App() {
     const {config} = useGlobalConfig();
@@ -35,6 +37,41 @@ function App() {
         console.log("New Terminal Profile", profile.name, id);
     };
 
+    const closeTerminal = (id: string) => {
+        // Kill the PTY process on the backend
+        invoke("kill_terminal", {id}).catch((e) =>
+            console.error("Failed to kill terminal:", e)
+        );
+
+        // Compute new ID list
+        const newIds = ids.filter((i) => i !== id);
+
+        // Determine which tab should become active
+        let newCurrentId = currentId;
+        if (currentId === id) {
+            if (newIds.length > 0) {
+                const idx = ids.indexOf(id);
+                newCurrentId = newIds[Math.min(idx, newIds.length - 1)];
+            } else {
+                // No tabs left, close the window
+                getCurrentWindow().close().then();
+                return;
+            }
+        }
+
+        setTerminals((prevState) => {
+            const newState = {...prevState};
+            delete newState[id];
+            return newState;
+        });
+        setIds(newIds);
+        setCurrentId(newCurrentId);
+    };
+
+    const switchTab = (id: string) => {
+        setCurrentId(id);
+    };
+
     useEffect(() => {
         if (isInitialized.current) return;
         if (config.profiles.length && ids.length === 0) {
@@ -53,17 +90,46 @@ function App() {
     }, [currentProfile]);
 
     if (config.profiles.length) {
+        const tabs = ids
+            .filter((id) => id in terminals)
+            .map((id) => ({id, name: terminals[id].name}));
+
         return (
-            <div className="w-screen h-screen overflow-hidden" style={{background: currentTheme?.background ?? "black"}}>
-                <div className="flex flex-col items-center justify-between w-full h-full pb-1">
-                    <TitleBar profile={currentProfile} theme={currentTheme}/>
-                    {ids.map((id) => (
-                        <Term
-                            id={id}
-                            profile={terminals[id]}
-                            key={id}
-                        />
-                    ))}
+            <div
+                className="w-screen h-screen overflow-hidden flex flex-row"
+                style={{background: currentTheme?.background ?? "black"}}
+            >
+                <TabBar
+                    tabs={tabs}
+                    activeId={currentId}
+                    onSelect={switchTab}
+                    onClose={closeTerminal}
+                    onNew={() => newTerminal(config.profiles[0])}
+                    backgroundColor={currentTheme?.background ?? "#000000"}
+                    foregroundColor={currentTheme?.foreground ?? "#ffffff"}
+                />
+                <div className="flex-1 flex flex-col min-w-0">
+                    <TitleBar theme={currentTheme}/>
+                    <div className="flex-1 relative overflow-hidden">
+                        {ids.filter((id) => id in terminals).map((id) => (
+                            <div
+                                key={id}
+                                className="absolute inset-0"
+                                style={{
+                                    zIndex: id === currentId ? 1 : 0,
+                                    pointerEvents: id === currentId ? "auto" : "none",
+                                    opacity: id === currentId ? 1 : 0,
+                                }}
+                            >
+                                <Term
+                                    id={id}
+                                    profile={terminals[id]}
+                                    onClose={() => closeTerminal(id)}
+                                    onNewTab={() => newTerminal(config.profiles[0])}
+                                />
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         );

@@ -20,12 +20,10 @@ interface TermProps {
 
 export default function Term(props : TermProps) {
     const {id, profile} = props;
-    const term = useRef<Terminal>(new Terminal({
-        allowProposedApi: true,
-        ...profile,
-    }));
+    const term = useRef<Terminal | null>(null);
     const termRef = useRef<HTMLDivElement>(null);
     const isInitialized = useRef<boolean>(false);
+    const bindingsLoaded = useRef<boolean>(false);
     const padding = useMemo(() => parseProfilePadding(profile), [profile]);
     const {config} = useGlobalConfig();
 
@@ -75,19 +73,37 @@ export default function Term(props : TermProps) {
         }
     };
 
+    // Keep handleActions ref fresh for the bindings callback
+    const handleActionsRef = useRef(handleActions);
+    handleActionsRef.current = handleActions;
+
+    // Load keybindings once
     useEffect(() => {
-        loadBindings(term.current, config, handleActions);
+        if (!term.current || bindingsLoaded.current) return;
+        bindingsLoaded.current = true;
+        loadBindings(term.current, config, (action) => {
+            handleActionsRef.current(action);
+        });
     }, [config]);
 
+    // Initialize terminal
     useEffect(() => {
         if (isInitialized.current) return;
         isInitialized.current = true;
+
+        // Create terminal inside effect so StrictMode remount gets a fresh instance
+        term.current = new Terminal({
+            allowProposedApi: true,
+            ...profile,
+        });
+
+        let observer: ResizeObserver | undefined;
 
         const windowSize = getWindowSizeFromRowsAndColumns();
         getCurrentWindow().setSize(new LogicalSize(windowSize)).then();
 
         parseProfileTheme(profile).then((theme) => {
-            term.current.options.theme = theme;
+            term.current!.options.theme = theme;
         });
 
         const fitAddon = new FitAddon();
@@ -117,26 +133,27 @@ export default function Term(props : TermProps) {
                 ...profile,
             }).then(() => {
                 console.log("Starting terminal", id);
-                invoke("resize_terminal", {id, cols: term.current.cols, rows: term.current.rows}).then();
+                invoke("resize_terminal", {id, cols: term.current!.cols, rows: term.current!.rows}).then();
             });
         });
 
         const handleResize = () => {
             fitAddon.fit();
         };
-        const observer = new ResizeObserver(handleResize);
+        observer = new ResizeObserver(handleResize);
         if (termRef.current) {
             observer.observe(termRef.current);
         }
-
     }, [id]);
 
     return (
-        <div ref={termRef} className="w-full h-full overflow-hidden" style={{
+        <div className="w-full h-full overflow-hidden" style={{
             paddingLeft: padding.left,
             paddingRight: padding.right,
             paddingTop: padding.top,
             paddingBottom: padding.bottom,
-        }}/>
+        }}>
+            <div ref={termRef} className="w-full h-full overflow-hidden"/>
+        </div>
     );
 }
