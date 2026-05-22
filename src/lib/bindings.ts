@@ -68,12 +68,29 @@ export function findBinding(
         return aKeys.every((k) => b.args![k] === args![k]);
     });
 }
+function keySignature(key: string, withKeys: string[]): string {
+    return `${key}|${[...withKeys].sort().join(",")}`;
+}
+
 export function loadBindings(
     term: Terminal,
     bindings: Binding[],
     onAction: (action: Actions, args?: Record<string, string>) => void,
 ) {
+    const held = new Set<string>();
+
     term.attachCustomKeyEventHandler((event) => {
+        if (event.type === "keyup") {
+            for (const binding of bindings) {
+                if (binding.key === event.key) {
+                    held.delete(keySignature(binding.key, binding.with));
+                }
+            }
+            return true;
+        }
+
+        if (event.type !== "keydown") return true;
+
         for (const binding of bindings) {
             if (binding.key === event.key) {
                 let flag = true;
@@ -101,6 +118,9 @@ export function loadBindings(
                     }
                 }
                 if (flag) {
+                    const sig = keySignature(binding.key, binding.with);
+                    if (held.has(sig)) return false;
+                    held.add(sig);
                     onAction(binding.action, binding.args);
                     return false;
                 }
