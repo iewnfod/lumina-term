@@ -5,6 +5,7 @@ import {Button} from "@heroui/react";
 import {getCurrentWindow} from "@tauri-apps/api/window";
 import {useEffect, useState} from "react";
 import {ITheme} from "@xterm/xterm";
+import {isMacOS} from "../lib/utils.ts";
 
 function WindowControl() {
     const [isMaximized, setIsMaximized] = useState(false);
@@ -86,23 +87,27 @@ export default function TitleBar({
         >
             <div
                 data-tauri-drag-region
-                className="w-full h-full grow flex flex-col items-start justify-center pl-2"
+                className={`w-full h-full grow flex flex-col justify-center ${isMacOS() ? "items-center" : "items-start"} pl-2`}
                 style={{
                     color: theme?.foreground ?? "white",
                 }}
             >
                 <div className="flex flex-row justify-items-center gap-1">
-                    <img
-                        src={Icon}
-                        alt=""
-                        className="h-6 w-6 pointer-events-none"
-                    />
+                    {!isMacOS() && (
+                        <img
+                            src={Icon}
+                            alt=""
+                            className="h-6 w-6 pointer-events-none"
+                        />
+                    )}
                     <h1 className="leading-tight translate-y-0.5">{profile?.name ?? "Lumina"}</h1>
                 </div>
             </div>
-            <div className="" style={{color: theme?.foreground ?? "white"}}>
-                <WindowControl/>
-            </div>
+            {!isMacOS() && (
+                <div className="" style={{color: theme?.foreground ?? "white"}}>
+                    <WindowControl/>
+                </div>
+            )}
         </div>
     );
 }

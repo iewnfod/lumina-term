@@ -52,3 +52,5 @@ export const DEFAULT_CONFIG: GlobalConfig = {
         },
     ]
 };
+
+export const MACOS_PADDING_OFFSET = 8;

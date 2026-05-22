@@ -19,7 +19,12 @@
                 "minHeight": 400,
                 "transparent": true,
                 "decorations": false,
-                "visible": false
+                "visible": false,
+                "hiddenTitle": true,
+                "trafficLightPosition": {
+                    "x": 18,
+                    "y": 18
+                }
             }
         ],
         "security": {

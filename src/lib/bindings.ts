@@ -1,10 +1,9 @@
 import {Terminal} from "@xterm/xterm";
 import {Actions, GlobalConfig} from "../types/config.ts";
-import {platform} from "@tauri-apps/plugin-os";
+import {isMacOS} from "./utils.ts";
 
 export function loadBindings(term: Terminal, config: GlobalConfig, onAction: (action: Actions) => void) {
     const bindings = config.bindings ?? [];
-    const os = platform();
 
     term.attachCustomKeyEventHandler((event) => {
         for (const binding of bindings) {
@@ -25,7 +24,7 @@ export function loadBindings(term: Terminal, config: GlobalConfig, onAction: (ac
                             flag = event.metaKey;
                             break;
                         case "CtrlOrCommand":
-                            if (os === "macos" || os === "ios") {
+                            if (isMacOS()) {
                                 flag = event.metaKey;
                             } else {
                                 flag = event.ctrlKey;
