@@ -81,7 +81,7 @@ export default function TabBar(props: TabBarProps) {
                             className="h-5 w-5 pointer-events-none"
                         />
                     )}
-                    <span className="text-sm font-medium truncate leading-tight">
+                    <span className="text-sm font-medium truncate leading-tight translate-y-px">
                         Lumina
                     </span>
                 </div>

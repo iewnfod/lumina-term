@@ -114,7 +114,7 @@ export default function TitleBar({
                 }}
             >
                 <button
-                    className="ml-2 p-1 rounded-md hover:bg-white/10 transition-colors"
+                    className="ml-2 p-1 rounded-md hover:bg-white/10 transition-colors cursor-pointer"
                     style={{ color: fg }}
                     onClick={onToggleTabBar}
                 >
@@ -135,7 +135,7 @@ export default function TitleBar({
             }}
         >
             <button
-                className="ml-2 p-1 rounded-md hover:bg-white/10 transition-colors"
+                className="ml-2 p-1 rounded-md hover:bg-white/10 transition-colors cursor-pointer"
                 style={{ color: fg }}
                 onClick={onToggleTabBar}
             >
