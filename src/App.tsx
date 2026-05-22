@@ -12,6 +12,7 @@ import {parseProfileTheme} from "./lib/term.ts";
 import {invoke} from "@tauri-apps/api/core";
 import CommandPalette, {CommandAction} from "./components/CommandPalette.tsx";
 import {isMacOS, openConfigFile} from "./lib/utils.ts";
+import {parseBindings} from "./lib/bindings.ts";
 import {Plus, X, FileCog, PanelLeftClose, PanelLeftOpen, Terminal as TerminalIcon} from "lucide-react";
 
 function App() {
@@ -99,7 +100,7 @@ function App() {
     // Block browser default actions for all user-configured keyboard bindings
     // so the WebView doesn't steal key events before xterm gets to handle them.
     useEffect(() => {
-        const bindings = config.bindings ?? [];
+        const bindings = parseBindings(config.bindings);
 
         const handleKeyDown = (e: KeyboardEvent) => {
             for (const binding of bindings) {

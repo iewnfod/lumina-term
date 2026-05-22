@@ -1,5 +1,5 @@
 import {ITheme} from "@xterm/xterm";
-import {GlobalConfig} from "./types/config.ts";
+import {Binding, GlobalConfig} from "./types/config.ts";
 
 export const DEFAULT_TERMINAL_THEME: ITheme = {
     background: "#000000",
@@ -31,32 +31,33 @@ export const DEFAULT_TERMINAL_THEME: ITheme = {
 
 export const CONFIG_SAVE_PATH = "config.json";
 
+export const DEFAULT_BINDINGS: Binding[] = [
+    {
+        key: "t",
+        with: ["CtrlOrCommand"],
+        action: "newTab",
+    },
+    {
+        key: "w",
+        with: ["CtrlOrCommand"],
+        action: "closeTab",
+    },
+    {
+        key: ",",
+        with: ["CtrlOrCommand"],
+        action: "openConfigFile",
+    },
+    {
+        key: "P",
+        with: ["CtrlOrCommand", "shift"],
+        action: "openCommandPalette",
+    },
+];
+
 export const DEFAULT_CONFIG: GlobalConfig = {
     language: 'en-us',
     profiles: [],
     showTabBar: false,
-    bindings: [
-        {
-            key: "t",
-            with: ["CtrlOrCommand"],
-            action: "newTab",
-        },
-        {
-            key: "w",
-            with: ["CtrlOrCommand"],
-            action: "closeTab",
-        },
-        {
-            key: ",",
-            with: ["CtrlOrCommand"],
-            action: "openConfigFile",
-        },
-        {
-            key: "P",
-            with: ["CtrlOrCommand", "shift"],
-            action: "openCommandPalette",
-        },
-    ]
 };
 
 export const MACOS_PADDING_OFFSET = 8;

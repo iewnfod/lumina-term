@@ -1,10 +1,29 @@
 import {Terminal} from "@xterm/xterm";
-import {Actions, GlobalConfig} from "../types/config.ts";
+import {Actions, Binding} from "../types/config.ts";
+import {DEFAULT_BINDINGS} from "../constants.ts";
 import {isMacOS} from "./utils.ts";
 
-export function loadBindings(term: Terminal, config: GlobalConfig, onAction: (action: Actions) => void) {
-    const bindings = config.bindings ?? [];
+export function parseBindings(configBindings?: Binding[]): Binding[] {
+    const merged = [...DEFAULT_BINDINGS];
+    if (!configBindings) return merged;
 
+    for (const userBinding of configBindings) {
+        const idx = merged.findIndex((b) => b.action === userBinding.action);
+        if (idx !== -1) {
+            merged[idx] = userBinding;
+        } else {
+            merged.push(userBinding);
+        }
+    }
+
+    return merged;
+}
+
+export function loadBindings(
+    term: Terminal,
+    bindings: Binding[],
+    onAction: (action: Actions) => void,
+) {
     term.attachCustomKeyEventHandler((event) => {
         for (const binding of bindings) {
             if (binding.key === event.key) {

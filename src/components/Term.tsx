@@ -6,7 +6,7 @@ import {TerminalProfile} from "../types/terminal.ts";
 import {FitAddon} from "@xterm/addon-fit";
 import {getCurrentWindow, LogicalSize} from "@tauri-apps/api/window";
 import {parseProfilePadding, parseProfileTheme} from "../lib/term.ts";
-import {loadBindings} from "../lib/bindings.ts";
+import {loadBindings, parseBindings} from "../lib/bindings.ts";
 import {Actions} from "../types/config.ts";
 import {openConfigFile} from "../lib/utils.ts";
 import {useGlobalConfig} from "../hooks/config.tsx";
@@ -86,7 +86,7 @@ export default function Term(props : TermProps) {
     useEffect(() => {
         if (!term.current || bindingsLoaded.current) return;
         bindingsLoaded.current = true;
-        loadBindings(term.current, config, (action) => {
+        loadBindings(term.current, parseBindings(config.bindings), (action) => {
             handleActionsRef.current(action);
         });
     }, [config]);
