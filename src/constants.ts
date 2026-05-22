@@ -34,6 +34,7 @@ export const CONFIG_SAVE_PATH = "config.json";
 export const DEFAULT_CONFIG: GlobalConfig = {
     language: 'en-us',
     profiles: [],
+    showTabBar: false,
     bindings: [
         {
             key: "t",

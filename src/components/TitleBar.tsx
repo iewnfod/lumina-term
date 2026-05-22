@@ -1,4 +1,4 @@
-import {LucideMaximize, LucideMinimize, LucideMinus, LucideX} from "lucide-react";
+import {LucideMaximize, LucideMinimize, LucideMinus, LucideX, PanelLeftClose, PanelLeftOpen} from "lucide-react";
 import {Button} from "@heroui/react";
 import {getCurrentWindow} from "@tauri-apps/api/window";
 import {useEffect, useMemo, useState} from "react";
@@ -86,11 +86,16 @@ function WindowControl() {
 }
 
 export default function TitleBar({
-    theme
+    theme,
+    tabBarVisible,
+    onToggleTabBar,
 } : {
     theme: ITheme | null,
+    tabBarVisible: boolean,
+    onToggleTabBar: () => void,
 }) {
     const bg = theme?.background ?? "black";
+    const fg = theme?.foreground ?? "white";
 
     const borderColor = useMemo(() => {
         const dark = isColorDark(bg);
@@ -101,27 +106,42 @@ export default function TitleBar({
         return (
             <div
                 data-tauri-drag-region
-                className="w-full select-none shrink-0"
+                className="w-full flex flex-row items-center select-none shrink-0"
                 style={{
                     height: 36,
                     background: bg,
                     borderBottom: `1px solid ${borderColor}`,
                 }}
-            />
+            >
+                <button
+                    className="ml-2 p-1 rounded-md hover:bg-white/10 transition-colors"
+                    style={{ color: fg }}
+                    onClick={onToggleTabBar}
+                >
+                    {tabBarVisible ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
+                </button>
+            </div>
         );
     }
 
     return (
         <div
             data-tauri-drag-region
-            className="w-full flex flex-row items-center justify-end select-none shrink-0"
+            className="w-full flex flex-row items-center justify-between select-none shrink-0"
             style={{
                 height: 36,
                 background: bg,
                 borderBottom: `1px solid ${borderColor}`,
             }}
         >
-            <div style={{color: theme?.foreground ?? "white"}}>
+            <button
+                className="ml-2 p-1 rounded-md hover:bg-white/10 transition-colors"
+                style={{ color: fg }}
+                onClick={onToggleTabBar}
+            >
+                {tabBarVisible ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
+            </button>
+            <div style={{ color: fg }}>
                 <WindowControl/>
             </div>
         </div>

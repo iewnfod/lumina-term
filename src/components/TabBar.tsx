@@ -16,6 +16,7 @@ interface TabBarProps {
     onNew: () => void;
     backgroundColor: string;
     foregroundColor: string;
+    collapsed: boolean;
 }
 
 function adjustColor(hex: string, amount: number): string {
@@ -36,7 +37,7 @@ function isColorDark(hex: string): boolean {
 }
 
 export default function TabBar(props: TabBarProps) {
-    const { tabs, activeId, onSelect, onClose, onNew, backgroundColor, foregroundColor } = props;
+    const { tabs, activeId, onSelect, onClose, onNew, backgroundColor, foregroundColor, collapsed } = props;
 
     const colors = useMemo(() => {
         const dark = isColorDark(backgroundColor);
@@ -53,12 +54,14 @@ export default function TabBar(props: TabBarProps) {
         return { dark, borderColor, activeOverlay, hoverOverlay, inactiveText };
     }, [backgroundColor]);
 
+    const borderStyle = collapsed ? "none" : `1px solid ${colors.borderColor}`;
+
     return (
         <div
-            className="flex flex-col h-full select-none"
+            className="flex flex-col h-full select-none transition-all duration-300 ease-in-out overflow-hidden"
             style={{
-                width: 180,
-                minWidth: 180,
+                width: collapsed ? 0 : 180,
+                minWidth: collapsed ? 0 : 180,
                 background: backgroundColor,
             }}
         >
@@ -85,7 +88,7 @@ export default function TabBar(props: TabBarProps) {
             </div>
 
             <div className="flex-1 overflow-y-auto overflow-x-hidden" data-tauri-drag-region style={{
-                borderRight: `1px solid ${colors.borderColor}`,
+                borderRight: borderStyle,
             }}>
                 {tabs.map((tab) => {
                     const isActive = tab.id === activeId;
@@ -144,7 +147,7 @@ export default function TabBar(props: TabBarProps) {
                 className="border-t shrink-0"
                 style={{
                     borderColor: colors.borderColor,
-                    borderRight: `1px solid ${colors.borderColor}`,
+                    borderRight: borderStyle,
                 }}
             >
                 <button

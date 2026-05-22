@@ -11,7 +11,7 @@ import {parseProfileTheme} from "./lib/term.ts";
 import {invoke} from "@tauri-apps/api/core";
 
 function App() {
-    const {config} = useGlobalConfig();
+    const {config, updateConfig} = useGlobalConfig();
     const [ids, setIds] = useState<string[]>([]);
     const [terminals, setTerminals] = useState<Record<string, TerminalProfile>>({});
     const [currentId, setCurrentId] = useState<string | null>(null);
@@ -23,6 +23,7 @@ function App() {
         }
     }, [currentId, terminals]);
     const [currentTheme, setCurrentTheme] = useState<ITheme | null>(null);
+    const tabBarVisible = config.showTabBar ?? false;
     const isInitialized = useRef<boolean>(false);
 
     const newTerminal = (profile: TerminalProfile) => {
@@ -107,9 +108,15 @@ function App() {
                     onNew={() => newTerminal(config.profiles[0])}
                     backgroundColor={currentTheme?.background ?? "#000000"}
                     foregroundColor={currentTheme?.foreground ?? "#ffffff"}
+                    profileName={currentProfile?.name ?? "Lumina"}
+                    collapsed={!tabBarVisible}
                 />
                 <div className="flex-1 flex flex-col min-w-0">
-                    <TitleBar theme={currentTheme}/>
+                    <TitleBar
+                        theme={currentTheme}
+                        tabBarVisible={tabBarVisible}
+                        onToggleTabBar={() => updateConfig({ showTabBar: !tabBarVisible })}
+                    />
                     <div className="flex-1 relative overflow-hidden">
                         {ids.filter((id) => id in terminals).map((id) => (
                             <div
