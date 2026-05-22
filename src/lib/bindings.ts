@@ -3,26 +3,75 @@ import {Actions, Binding} from "../types/config.ts";
 import {DEFAULT_BINDINGS} from "../constants.ts";
 import {isMacOS} from "./utils.ts";
 
-export function parseBindings(configBindings?: Binding[]): Binding[] {
-    const merged = [...DEFAULT_BINDINGS];
-    if (!configBindings) return merged;
+function actionSignature(b: Binding): string {
+    const args = b.args
+        ? JSON.stringify(Object.keys(b.args).sort().map((k) => [k, b.args![k]]))
+        : "";
+    return `${b.action}|${args}`;
+}
 
-    for (const userBinding of configBindings) {
-        const idx = merged.findIndex((b) => b.action === userBinding.action);
-        if (idx !== -1) {
-            merged[idx] = userBinding;
-        } else {
-            merged.push(userBinding);
+export function parseBindings(configBindings?: Binding[]): Binding[] {
+    if (!configBindings?.length) return [...DEFAULT_BINDINGS];
+
+    const merged = [...configBindings];
+    const seen = new Set(configBindings.map(actionSignature));
+
+    for (const def of DEFAULT_BINDINGS) {
+        if (!seen.has(actionSignature(def))) {
+            merged.push(def);
         }
     }
 
     return merged;
 }
 
+export function bindingToShortcut(
+    b: Binding,
+): { abbr?: string; content: string }[] {
+    const shortcut: { abbr?: string; content: string }[] = [];
+    for (const w of b.with) {
+        switch (w) {
+            case "ctrl":
+                shortcut.push({ abbr: "ctrl", content: "Ctrl" });
+                break;
+            case "shift":
+                shortcut.push({ content: "Shift" });
+                break;
+            case "alt":
+                shortcut.push({ abbr: "alt", content: "Alt" });
+                break;
+            case "command":
+                shortcut.push({ abbr: "cmd", content: "Cmd" });
+                break;
+            case "CtrlOrCommand":
+                shortcut.push({
+                    abbr: isMacOS() ? "cmd" : "ctrl",
+                    content: isMacOS() ? "Cmd" : "Ctrl",
+                });
+                break;
+        }
+    }
+    shortcut.push({ content: b.key.length === 1 ? b.key.toUpperCase() : b.key });
+    return shortcut;
+}
+
+export function findBinding(
+    bindings: Binding[],
+    action: Actions,
+    args?: Record<string, string>,
+): Binding | undefined {
+    return bindings.find((b) => {
+        if (b.action !== action) return false;
+        const bKeys = b.args ? Object.keys(b.args) : [];
+        const aKeys = args ? Object.keys(args) : [];
+        if (bKeys.length !== aKeys.length) return false;
+        return aKeys.every((k) => b.args![k] === args![k]);
+    });
+}
 export function loadBindings(
     term: Terminal,
     bindings: Binding[],
-    onAction: (action: Actions) => void,
+    onAction: (action: Actions, args?: Record<string, string>) => void,
 ) {
     term.attachCustomKeyEventHandler((event) => {
         for (const binding of bindings) {
@@ -52,7 +101,7 @@ export function loadBindings(
                     }
                 }
                 if (flag) {
-                    onAction(binding.action);
+                    onAction(binding.action, binding.args);
                     return false;
                 }
             }

@@ -16,7 +16,7 @@ interface TermProps {
     profile: TerminalProfile;
     isActive?: boolean;
     onClose?: () => void;
-    onNewTab?: () => void;
+    onNewTab?: (profileName?: string) => void;
     onOpenCommandPalette?: () => void;
 }
 
@@ -61,13 +61,13 @@ export default function Term(props : TermProps) {
         return {width: pixelWidth, height: pixelHeight};
     }, [profile]);
 
-    const handleActions = (action: Actions) => {
+    const handleActions = (action: Actions, args?: Record<string, string>) => {
         switch (action) {
             case "closeTab":
                 props.onClose?.();
                 break;
             case "newTab":
-                props.onNewTab?.();
+                props.onNewTab?.(args?.profileName);
                 break;
             case "openConfigFile":
                 openConfigFile().then();
@@ -86,8 +86,8 @@ export default function Term(props : TermProps) {
     useEffect(() => {
         if (!term.current || bindingsLoaded.current) return;
         bindingsLoaded.current = true;
-        loadBindings(term.current, parseBindings(config.bindings), (action) => {
-            handleActionsRef.current(action);
+        loadBindings(term.current, parseBindings(config.bindings), (action, args) => {
+            handleActionsRef.current(action, args);
         });
     }, [config]);
 

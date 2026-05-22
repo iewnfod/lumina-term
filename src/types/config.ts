@@ -8,6 +8,7 @@ export interface Binding {
     key: string;
     with: WithKeys[];
     action: Actions;
+    args?: Record<string, string>;
 }
 
 export interface GlobalConfig {

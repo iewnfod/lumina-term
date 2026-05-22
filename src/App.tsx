@@ -12,8 +12,8 @@ import {parseProfileTheme} from "./lib/term.ts";
 import {invoke} from "@tauri-apps/api/core";
 import CommandPalette, {CommandAction} from "./components/CommandPalette.tsx";
 import {isMacOS, openConfigFile} from "./lib/utils.ts";
-import {parseBindings} from "./lib/bindings.ts";
-import {Plus, X, FileCog, PanelLeftClose, PanelLeftOpen, Terminal as TerminalIcon} from "lucide-react";
+import {bindingToShortcut, findBinding, parseBindings} from "./lib/bindings.ts";
+import {X, FileCog, PanelLeftClose, PanelLeftOpen, Terminal as TerminalIcon} from "lucide-react";
 
 function App() {
     const {config, updateConfig} = useGlobalConfig();
@@ -30,6 +30,7 @@ function App() {
     }, [currentId, terminals]);
     const [currentTheme, setCurrentTheme] = useState<ITheme | null>(null);
     const tabBarVisible = config.showTabBar ?? false;
+    const parsedBindings = useMemo(() => parseBindings(config.bindings), [config.bindings]);
     const isInitialized = useRef<boolean>(false);
     const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
@@ -100,10 +101,8 @@ function App() {
     // Block browser default actions for all user-configured keyboard bindings
     // so the WebView doesn't steal key events before xterm gets to handle them.
     useEffect(() => {
-        const bindings = parseBindings(config.bindings);
-
         const handleKeyDown = (e: KeyboardEvent) => {
-            for (const binding of bindings) {
+            for (const binding of parsedBindings) {
                 // Case-insensitive key match for letter keys
                 const eventKey = e.key.length === 1 ? e.key.toLowerCase() : e.key;
                 const bindingKey = binding.key.length === 1 ? binding.key.toLowerCase() : binding.key;
@@ -141,53 +140,41 @@ function App() {
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [config.bindings]);
+    }, [parsedBindings]);
 
     // Build command palette actions
-    const modAbbr = isMacOS() ? "command" : "ctrl";
-
     const commandActions: CommandAction[] = useMemo(() => {
         const actions: CommandAction[] = [];
-        const defaultProfile = config.profiles[0];
-        if (!defaultProfile) return actions;
-
-        // New Tab (default profile)
-        actions.push({
-            id: "new-tab",
-            label: t["New {name}"].replace("{name}", defaultProfile.name),
-            description: t['Create a new terminal with profile "{name}"'].replace("{name}", defaultProfile.name),
-            icon: <Plus size={18} />,
-            shortcut: [{ abbr: modAbbr, content: "T" }],
-            category: t["Terminal"],
-            keywords: ["new tab", "新建标签", "terminal"],
-            onSelect: () => newTerminal(defaultProfile),
-        });
+        if (!config.profiles.length) return actions;
 
         // New terminal with each profile
-        if (config.profiles.length > 1) {
-            const newLabel = t["New {name}"];
-            const newDesc = t['Create a new terminal with profile "{name}"'];
-            for (const profile of config.profiles) {
-                actions.push({
-                    id: `new-terminal-${profile.name}`,
-                    label: newLabel.replace("{name}", profile.name),
-                    description: newDesc.replace("{name}", profile.name),
-                    icon: <TerminalIcon size={18} />,
-                    category: t["Terminal"],
-                    keywords: ["new", "terminal", "新建", profile.name],
-                    onSelect: () => newTerminal(profile),
-                });
-            }
+        const newLabel = t["New {name}"];
+        const newDesc = t['Create a new terminal with profile "{name}"'];
+        for (const profile of config.profiles) {
+            const isDefault = profile === config.profiles[0];
+            const profileArgs = isDefault ? undefined : { profileName: profile.name };
+            const profileBinding = findBinding(parsedBindings, "newTab", profileArgs);
+            actions.push({
+                id: `new-terminal-${profile.name}`,
+                label: newLabel.replace("{name}", profile.name),
+                description: newDesc.replace("{name}", profile.name),
+                icon: <TerminalIcon size={18} />,
+                shortcut: profileBinding ? bindingToShortcut(profileBinding) : undefined,
+                category: t["Terminal"],
+                keywords: ["new", "terminal", "新建", profile.name],
+                onSelect: () => newTerminal(profile),
+            });
         }
 
         // Close current tab
         if (currentId) {
+            const closeBinding = findBinding(parsedBindings, "closeTab");
             actions.push({
                 id: "close-tab",
                 label: t["Close Current Tab"],
                 description: t["Close the current terminal tab"],
                 icon: <X size={18} />,
-                shortcut: [{ abbr: modAbbr, content: "W" }],
+                shortcut: closeBinding ? bindingToShortcut(closeBinding) : undefined,
                 category: t["Terminal"],
                 keywords: ["close", "关闭", "tab", "kill"],
                 onSelect: () => closeTerminal(currentId),
@@ -212,12 +199,13 @@ function App() {
         });
 
         // Open settings
+        const settingsBinding = findBinding(parsedBindings, "openConfigFile");
         actions.push({
             id: "open-settings",
             label: t["Open Settings"],
             description: t["Open the configuration file"],
             icon: <FileCog size={18} />,
-            shortcut: [{ abbr: modAbbr, content: "," }],
+            shortcut: settingsBinding ? bindingToShortcut(settingsBinding) : undefined,
             category: t["Settings"],
             keywords: ["settings", "设置", "config", "配置", "preferences", "options"],
             onSelect: () => {
@@ -226,7 +214,7 @@ function App() {
         });
 
         return actions;
-    }, [config.profiles, currentId, tabBarVisible, modAbbr, t]);
+    }, [config.profiles, currentId, tabBarVisible, parsedBindings, t]);
 
     // Close command palette when Escape is pressed while it's open
     const handleCommandPaletteOpenChange = useCallback((open: boolean) => {
@@ -280,7 +268,18 @@ function App() {
                                     profile={terminals[id]}
                                     isActive={id === currentId}
                                     onClose={() => closeTerminal(id)}
-                                    onNewTab={() => newTerminal(config.profiles[0])}
+                                    onNewTab={(profileName) => {
+                                        if (profileName) {
+                                            const profile = config.profiles.find(p => p.name === profileName);
+                                            if (profile) {
+                                                newTerminal(profile);
+                                            } else {
+                                                newTerminal(config.profiles[0]);
+                                            }
+                                        } else {
+                                            newTerminal(config.profiles[0]);
+                                        }
+                                    }}
                                     onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
                                 />
                             </div>
