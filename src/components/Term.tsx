@@ -142,6 +142,13 @@ export default function Term(props : TermProps) {
             });
         });
 
+        listen(`term-exit-${id}`, () => {
+            console.log("[DEBUG] Received term-exit event for", id);
+            console.log("[DEBUG] onClose function:", typeof props.onClose);
+            props.onClose?.();
+            console.log("[DEBUG] onClose called for", id);
+        });
+
         const handleResize = () => {
             fitAddon.fit();
         };

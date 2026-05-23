@@ -13,7 +13,7 @@ import {invoke} from "@tauri-apps/api/core";
 import CommandPalette, {CommandAction} from "./components/CommandPalette.tsx";
 import {isMacOS, openConfigFile} from "./lib/utils.ts";
 import {bindingToShortcut, findBinding, parseBindings} from "./lib/bindings.ts";
-import {X, FileCog, PanelLeftClose, PanelLeftOpen, Terminal as TerminalIcon} from "lucide-react";
+import {X, FileCog, PanelLeftClose, PanelLeftOpen, Terminal as TerminalIcon, Monitor, MonitorOff} from "lucide-react";
 
 function App() {
     const {config, updateConfig} = useGlobalConfig();
@@ -32,6 +32,8 @@ function App() {
     const tabBarVisible = config.showTabBar ?? false;
     const parsedBindings = useMemo(() => parseBindings(config.bindings), [config.bindings]);
     const isInitialized = useRef<boolean>(false);
+    const closeOnLastTabRef = useRef(config.closeWindowOnLastTab);
+    closeOnLastTabRef.current = config.closeWindowOnLastTab;
     const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
     const newTerminal = (profile: TerminalProfile) => {
@@ -47,6 +49,7 @@ function App() {
     };
 
     const closeTerminal = (id: string) => {
+        console.log("[DEBUG] closeTerminal called for", id);
         // Kill the PTY process on the backend
         invoke("kill_terminal", {id}).catch((e) =>
             console.error("Failed to kill terminal:", e)
@@ -61,11 +64,13 @@ function App() {
             if (newIds.length > 0) {
                 const idx = ids.indexOf(id);
                 newCurrentId = newIds[Math.min(idx, newIds.length - 1)];
-            } else {
-                // No tabs left, close the window
+            } else if (closeOnLastTabRef.current !== false) {
+                // No tabs left, close the window (default behavior)
+                console.log("[DEBUG] No tabs left, closing window");
                 getCurrentWindow().close().then();
                 return;
             }
+            // If closeWindowOnLastTab is false, fall through to clear state
         }
 
         setTerminals((prevState) => {
@@ -75,6 +80,7 @@ function App() {
         });
         setIds(newIds);
         setCurrentId(newCurrentId);
+        console.log("[DEBUG] closeTerminal done, newIds:", newIds, "newCurrentId:", newCurrentId);
     };
 
     const switchTab = (id: string) => {
@@ -198,6 +204,24 @@ function App() {
             onSelect: () => updateConfig({ showTabBar: !tabBarVisible }),
         });
 
+        // Toggle close window on last tab
+        const closeOnLast = config.closeWindowOnLastTab !== false;
+        actions.push({
+            id: "toggle-close-window-last-tab",
+            label: closeOnLast ? t["Keep Window on Last Tab Closed"] : t["Close Window on Last Tab Closed"],
+            description: closeOnLast
+                ? t["Keep the window open after closing the last tab"]
+                : t["Close the window after closing the last tab"],
+            icon: closeOnLast ? (
+                <MonitorOff size={18} />
+            ) : (
+                <Monitor size={18} />
+            ),
+            category: t["View"],
+            keywords: ["window", "窗口", "close", "关闭", "last", "最后", "tab", "exit"],
+            onSelect: () => updateConfig({ closeWindowOnLastTab: !closeOnLast }),
+        });
+
         // Open settings
         const settingsBinding = findBinding(parsedBindings, "openConfigFile");
         actions.push({
@@ -214,7 +238,7 @@ function App() {
         });
 
         return actions;
-    }, [config.profiles, currentId, tabBarVisible, parsedBindings, t]);
+    }, [config.profiles, currentId, tabBarVisible, config.closeWindowOnLastTab, parsedBindings, t]);
 
     // Close command palette when Escape is pressed while it's open
     const handleCommandPaletteOpenChange = useCallback((open: boolean) => {

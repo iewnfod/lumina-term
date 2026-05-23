@@ -1,9 +1,11 @@
+use std::sync::Arc;
 use std::thread;
+use std::time::Duration;
 
 use portable_pty::{CommandBuilder, PtySize};
 use tauri::{AppHandle, Emitter, State};
 
-use crate::state::TerminalState;
+use crate::state::{CommandChild, SharedChild, TerminalState};
 
 #[tauri::command]
 pub fn start_terminal(
@@ -36,7 +38,7 @@ pub fn start_terminal(
 
     let mut cmd = CommandBuilder::new(exe_path);
     cmd.args(&["--login", "-i"]);
-    let mut _child = pty_pair
+    let child: CommandChild = pty_pair
         .slave
         .spawn_command(cmd)
         .expect("Failed to spawn terminal");
@@ -52,37 +54,92 @@ pub fn start_terminal(
         .take_writer()
         .expect("Failed to clone writer");
 
+    let shared_child: SharedChild = Arc::new(std::sync::Mutex::new(child));
+
+    // Store in state
     {
         let mut terminals = state
             .terminals
             .try_lock()
             .expect("Failed to lock terminals");
-        terminals.insert(id.clone(), (pty_pair, _child, writer));
+        terminals.insert(id.clone(), (pty_pair, shared_child.clone(), writer));
     }
 
+    // Reader thread: forwards terminal output to frontend
     let term_write_event_name = format!("term-write-{}", id);
+    let app_reader = app.clone();
+    let id_reader = id.clone();
     thread::spawn(move || {
+        println!("[DEBUG] Reader thread started for {}", id_reader);
         let mut buffer = [0u8; 1024];
         loop {
             match reader.read(&mut buffer) {
                 Ok(0) => {
-                    println!("Terminal {} closed", id);
+                    println!("[DEBUG] Terminal {} reader got EOF", id_reader);
                     break;
                 }
                 Ok(n) => {
                     let bytes = &buffer[..n];
                     if let Ok(text) = std::str::from_utf8(bytes) {
-                        // println!("Terminal {} output: {}", id, text);
-                        app.emit(&term_write_event_name, text.to_string())
-                            .expect("Failed to emit event");
+                        let _ = app_reader.emit(&term_write_event_name, text.to_string());
                     }
                 }
                 Err(e) => {
-                    eprintln!("Error reading from terminal: {}", e);
+                    eprintln!("[DEBUG] Terminal {} reader error: {}", id_reader, e);
                     break;
                 }
             }
         }
+        println!("[DEBUG] Reader thread ended for {}", id_reader);
+    });
+
+    // Watcher thread: polls child process exit, then cleans up
+    let term_exit_event_name = format!("term-exit-{}", id);
+    let app_watcher = app.clone();
+    let state_watcher = state.inner().clone();
+    let id_watcher = id.clone();
+    thread::spawn(move || {
+        println!("[DEBUG] Watcher thread started for {}", id_watcher);
+        loop {
+            let exited = {
+                let mut child_guard = shared_child
+                    .try_lock()
+                    .expect("Failed to lock child in watcher");
+                match child_guard.try_wait() {
+                    Ok(Some(status)) => {
+                        println!("[DEBUG] Child process {} exited with {:?}", id_watcher, status);
+                        true
+                    }
+                    Ok(None) => false,
+                    Err(e) => {
+                        eprintln!("[DEBUG] Child process {} wait error: {}", id_watcher, e);
+                        true
+                    }
+                }
+            };
+            if exited {
+                break;
+            }
+            thread::sleep(Duration::from_millis(200));
+        }
+
+        // Clean up terminal state
+        println!("[DEBUG] Cleaning up state for terminal {}", id_watcher);
+        {
+            let mut terminals = state_watcher
+                .terminals
+                .try_lock()
+                .expect("Failed to lock terminals in watcher");
+            let removed = terminals.remove(&id_watcher);
+            println!("[DEBUG] Terminal {} removed from state: {:?}", id_watcher, removed.is_some());
+        }
+
+        // Notify frontend
+        println!("[DEBUG] Emitting term-exit event for {}", id_watcher);
+        app_watcher
+            .emit(&term_exit_event_name, ())
+            .expect("Failed to emit exit event");
+        println!("[DEBUG] term-exit event emitted for {}", id_watcher);
     });
 }
 
@@ -92,8 +149,11 @@ pub fn kill_terminal(id: String, state: State<TerminalState>) {
         .terminals
         .try_lock()
         .expect("Failed to lock terminals");
-    if let Some((_, mut child, _)) = terminals.remove(&id) {
-        child.kill().expect("Failed to kill terminal");
+    if let Some((_, shared_child, _)) = terminals.remove(&id) {
+        let mut child = shared_child
+            .try_lock()
+            .expect("Failed to lock child in kill_terminal");
+        let _ = child.kill();
     } else {
         println!("Terminal with id {} not found", id);
     }

@@ -16,4 +16,5 @@ export interface GlobalConfig {
     profiles: TerminalProfile[];
     showTabBar?: boolean;
     bindings?: Binding[];
+    closeWindowOnLastTab?: boolean;
 }

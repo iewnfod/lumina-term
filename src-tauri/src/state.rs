@@ -6,10 +6,11 @@ use std::{
 
 use portable_pty::{Child, PtyPair};
 
-type CommandChild = Box<dyn Child + Send + Sync>;
+pub type CommandChild = Box<dyn Child + Send + Sync>;
+pub type SharedChild = Arc<Mutex<CommandChild>>;
 type TerminalWriter = Box<dyn Write + Send>;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct TerminalState {
-    pub terminals: Arc<Mutex<HashMap<String, (PtyPair, CommandChild, TerminalWriter)>>>,
+    pub terminals: Arc<Mutex<HashMap<String, (PtyPair, SharedChild, TerminalWriter)>>>,
 }
