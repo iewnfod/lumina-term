@@ -57,5 +57,11 @@
     "DevTools": "开发者工具",
     "Config File Path": "配置文件保存路径",
     "Log Directory": "日志目录",
-    "Open": "打开"
+    "Open": "打开",
+    "About": "关于",
+    "Author": "作者",
+    "Repository": "仓库",
+    "License": "开源协议",
+    "Technology Stack": "使用的技术",
+    "Default Profile": "默认配置文件"
 }

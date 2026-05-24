@@ -57,5 +57,11 @@
     "DevTools": "DevTools",
     "Config File Path": "Config File Path",
     "Log Directory": "Log Directory",
-    "Open": "Open"
+    "Open": "Open",
+    "About": "About",
+    "Author": "Author",
+    "Repository": "Repository",
+    "License": "License",
+    "Technology Stack": "Technology Stack",
+    "Default Profile": "Default Profile"
 }

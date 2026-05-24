@@ -87,6 +87,10 @@ export default function Term(props : TermProps) {
     const handleActionsRef = useRef(handleActions);
     handleActionsRef.current = handleActions;
 
+    // Keep onClose ref fresh for the term-exit listener (avoid stale closure)
+    const onCloseRef = useRef(props.onClose);
+    onCloseRef.current = props.onClose;
+
     // Initialize terminal
     useEffect(() => {
         if (isInitialized.current) return;
@@ -144,7 +148,7 @@ export default function Term(props : TermProps) {
 
         listen(`term-exit-${id}`, () => {
             info(`Terminal exited: id=${id}`);
-            props.onClose?.();
+            onCloseRef.current?.();
         });
 
         const handleResize = () => {

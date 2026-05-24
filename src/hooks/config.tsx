@@ -63,7 +63,9 @@ export function GlobalConfigProvider({ children }: { children: ReactNode }) {
 
     const newProfile = (profile: TerminalProfile) => {
         setConfig((prevState) => {
-            const updatedProfiles = [...prevState.profiles, profile];
+            const isFirst = prevState.profiles.length === 0 && !profile.default;
+            const updatedProfile = isFirst ? { ...profile, default: true } : profile;
+            const updatedProfiles = [...prevState.profiles, updatedProfile];
             const updated: GlobalConfig = {...prevState, profiles: updatedProfiles};
             saveConfig(updated);
             return updated;

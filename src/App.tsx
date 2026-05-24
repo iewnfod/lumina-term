@@ -11,12 +11,13 @@ import {ITheme} from "@xterm/xterm";
 import {parseProfileTheme} from "./lib/term.ts";
 import {invoke} from "@tauri-apps/api/core";
 import CommandPalette, {CommandAction} from "./components/CommandPalette.tsx";
-import {isMacOS} from "./lib/utils.ts";
 import {isColorDark} from "./hooks/surfaceColors.ts";
-import {bindingToShortcut, findBinding, parseBindings} from "./lib/bindings.ts";
-import {X, PanelLeftClose, PanelLeftOpen, Terminal as TerminalIcon, Monitor, MonitorOff, Settings as SettingsIcon} from "lucide-react";
+import {bindingToShortcut, findBinding, parseBindings, useKeyboardBindings, matchBinding} from "./lib/bindings.ts";
+import {Actions} from "./types/config.ts";
+import {X, PanelLeftClose, PanelLeftOpen, Terminal as TerminalIcon, Monitor, MonitorOff, Settings as SettingsIcon, Info} from "lucide-react";
 import SettingsPage from "./pages/SettingsPage.tsx";
-import {SETTINGS_TAB_ID} from "./constants.ts";
+import AboutPage from "./pages/AboutPage.tsx";
+import {SETTINGS_TAB_ID, ABOUT_TAB_ID} from "./constants.ts";
 import { info, debug, error } from "@tauri-apps/plugin-log";
 
 function App() {
@@ -35,9 +36,18 @@ function App() {
     const [currentTheme, setCurrentTheme] = useState<ITheme | null>(null);
     const tabBarVisible = config.showTabBar ?? false;
     const parsedBindings = useMemo(() => parseBindings(config.bindings), [config.bindings]);
+    const defaultProfile = useMemo(() => {
+        return config.profiles.find(p => p.default) || config.profiles[0];
+    }, [config.profiles]);
     const isInitialized = useRef<boolean>(false);
     const closeOnLastTabRef = useRef(config.closeWindowOnLastTab);
     closeOnLastTabRef.current = config.closeWindowOnLastTab;
+
+    // Refs to avoid stale closures in closeTerminal (called from term-exit listeners)
+    const idsRef = useRef(ids);
+    idsRef.current = ids;
+    const currentIdRef = useRef(currentId);
+    currentIdRef.current = currentId;
     const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
     const newTerminal = (profile: TerminalProfile) => {
@@ -54,13 +64,15 @@ function App() {
 
     const closeTerminal = (id: string) => {
         debug(`closeTerminal called for id=${id}`);
+        const currentIds = idsRef.current;
+        const currentActiveId = currentIdRef.current;
 
         // Settings tab: no PTY process, just remove from list
-        if (id === SETTINGS_TAB_ID) {
-            info("Closing settings tab");
-            const newIds = ids.filter((i) => i !== id);
-            let newCurrentId = currentId;
-            if (currentId === id) {
+        if (id === SETTINGS_TAB_ID || id === ABOUT_TAB_ID) {
+            info("Closing settings/about tab");
+            const newIds = currentIds.filter((i) => i !== id);
+            let newCurrentId = currentActiveId;
+            if (currentActiveId === id) {
                 if (newIds.length > 0) {
                     newCurrentId = newIds[newIds.length - 1];
                 } else if (closeOnLastTabRef.current !== false) {
@@ -79,13 +91,13 @@ function App() {
         );
 
         // Compute new ID list
-        const newIds = ids.filter((i) => i !== id);
+        const newIds = currentIds.filter((i) => i !== id);
 
         // Determine which tab should become active
-        let newCurrentId = currentId;
-        if (currentId === id) {
+        let newCurrentId = currentActiveId;
+        if (currentActiveId === id) {
             if (newIds.length > 0) {
-                const idx = ids.indexOf(id);
+                const idx = currentIds.indexOf(id);
                 newCurrentId = newIds[Math.min(idx, newIds.length - 1)];
             } else if (closeOnLastTabRef.current !== false) {
                 // No tabs left, close the window (default behavior)
@@ -121,12 +133,22 @@ function App() {
         setCurrentId(SETTINGS_TAB_ID);
     }, [ids]);
 
+    const openAbout = useCallback(() => {
+        info("Opening about");
+        if (ids.includes(ABOUT_TAB_ID)) {
+            setCurrentId(ABOUT_TAB_ID);
+            return;
+        }
+        setIds((prevState) => [...prevState, ABOUT_TAB_ID]);
+        setCurrentId(ABOUT_TAB_ID);
+    }, [ids]);
+
     useEffect(() => {
         if (isInitialized.current) return;
         if (config.profiles.length && ids.length === 0) {
             isInitialized.current = true;
             getCurrentWindow().setResizable(true).then();
-            newTerminal(config.profiles[0]);
+            newTerminal(defaultProfile);
         }
     }, [config]);
 
@@ -149,89 +171,41 @@ function App() {
         root.setAttribute("data-theme", dark ? "dark" : "light");
     }, [currentTheme?.background]);
 
-    // Handle keyboard bindings when settings page is active (no xterm to dispatch)
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (currentId !== SETTINGS_TAB_ID) return;
-
-            for (const binding of parsedBindings) {
-                const eventKey = e.key.length === 1 ? e.key.toLowerCase() : e.key;
-                const bindingKey = binding.key.length === 1 ? binding.key.toLowerCase() : binding.key;
-                if (eventKey !== bindingKey) continue;
-
-                let allMatch = true;
-                for (const w of binding.with) {
-                    switch (w) {
-                        case "ctrl": allMatch = allMatch && e.ctrlKey; break;
-                        case "shift": allMatch = allMatch && e.shiftKey; break;
-                        case "alt": allMatch = allMatch && e.altKey; break;
-                        case "command": allMatch = allMatch && e.metaKey; break;
-                        case "CtrlOrCommand": allMatch = allMatch && (isMacOS() ? e.metaKey : e.ctrlKey); break;
+    // Keyboard bindings for non-terminal tabs (Settings, About, etc.)
+    const isNonTerminalTab = currentId === SETTINGS_TAB_ID || currentId === ABOUT_TAB_ID;
+    const handleNonTerminalAction = useCallback((action: Actions, args?: Record<string, string>) => {
+        info(`Keybinding action from non-terminal tab: ${action}`);
+        switch (action) {
+            case "closeTab":
+                if (currentId) closeTerminal(currentId);
+                break;
+            case "newTab": {
+                const profileName = args?.profileName;
+                if (profileName) {
+                    const profile = config.profiles.find(p => p.name === profileName);
+                    if (profile) {
+                        newTerminal(profile);
+                        break;
                     }
-                    if (!allMatch) break;
                 }
-
-                if (allMatch) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    info(`Keybinding action from settings: ${binding.action}`);
-                    switch (binding.action) {
-                        case "closeTab":
-                            closeTerminal(SETTINGS_TAB_ID);
-                            break;
-                        case "newTab":
-                            newTerminal(config.profiles[0]);
-                            break;
-                        case "openSettings":
-                            openSettings();
-                            break;
-                        case "openCommandPalette":
-                            setIsCommandPaletteOpen(true);
-                            break;
-                    }
-                    return;
-                }
+                newTerminal(defaultProfile);
+                break;
             }
-        };
+            case "openSettings":
+                openSettings();
+                break;
+            case "openCommandPalette":
+                setIsCommandPaletteOpen(true);
+                break;
+        }
+    }, [currentId, config.profiles, openSettings]);
+    useKeyboardBindings(parsedBindings, handleNonTerminalAction, isNonTerminalTab);
 
-        window.addEventListener("keydown", handleKeyDown, { capture: true });
-        return () => window.removeEventListener("keydown", handleKeyDown, { capture: true });
-    }, [currentId, parsedBindings, config.profiles]);
+    // Global: prevent browser defaults for configured shortcuts
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            for (const binding of parsedBindings) {
-                // Case-insensitive key match for letter keys
-                const eventKey = e.key.length === 1 ? e.key.toLowerCase() : e.key;
-                const bindingKey = binding.key.length === 1 ? binding.key.toLowerCase() : binding.key;
-                if (eventKey !== bindingKey) continue;
-
-                // Check all modifiers
-                let allMatch = true;
-                for (const w of binding.with) {
-                    switch (w) {
-                        case "ctrl":
-                            allMatch = allMatch && e.ctrlKey;
-                            break;
-                        case "shift":
-                            allMatch = allMatch && e.shiftKey;
-                            break;
-                        case "alt":
-                            allMatch = allMatch && e.altKey;
-                            break;
-                        case "command":
-                            allMatch = allMatch && e.metaKey;
-                            break;
-                        case "CtrlOrCommand":
-                            allMatch = allMatch && (isMacOS() ? e.metaKey : e.ctrlKey);
-                            break;
-                    }
-                    if (!allMatch) break;
-                }
-
-                if (allMatch) {
-                    e.preventDefault();
-                    return;
-                }
+            if (matchBinding(e, parsedBindings)) {
+                e.preventDefault();
             }
         };
 
@@ -248,7 +222,7 @@ function App() {
         const newLabel = t["New {name}"];
         const newDesc = t['Create a new terminal with profile "{name}"'];
         for (const profile of config.profiles) {
-            const isDefault = profile === config.profiles[0];
+            const isDefault = profile.default;
             const profileArgs = isDefault ? undefined : { profileName: profile.name };
             const profileBinding = findBinding(parsedBindings, "newTab", profileArgs);
             actions.push({
@@ -328,8 +302,21 @@ function App() {
             },
         });
 
+        // Open about
+        actions.push({
+            id: "open-about",
+            label: t["About"],
+            description: t["About"],
+            icon: <Info size={18} />,
+            category: t["Settings"],
+            keywords: ["about", "关于", "info", "version", "版本"],
+            onSelect: () => {
+                openAbout();
+            },
+        });
+
         return actions;
-    }, [config.profiles, currentId, tabBarVisible, config.closeWindowOnLastTab, parsedBindings, t, openSettings]);
+    }, [config.profiles, currentId, tabBarVisible, config.closeWindowOnLastTab, parsedBindings, t, openSettings, openAbout]);
 
     // Close command palette when Escape is pressed while it's open
     const handleCommandPaletteOpenChange = useCallback((open: boolean) => {
@@ -341,6 +328,9 @@ function App() {
             .map((id) => {
                 if (id === SETTINGS_TAB_ID) {
                     return { id, name: t["Settings"] };
+                }
+                if (id === ABOUT_TAB_ID) {
+                    return { id, name: t["About"] };
                 }
                 if (id in terminals) {
                     return { id, name: terminals[id].name };
@@ -364,10 +354,11 @@ function App() {
                     activeId={currentId}
                     onSelect={switchTab}
                     onClose={closeTerminal}
-                    onNew={() => newTerminal(config.profiles[0])}
+                    onNew={() => newTerminal(defaultProfile)}
                     backgroundColor={currentTheme?.background ?? "#000000"}
                     foregroundColor={currentTheme?.foreground ?? "#ffffff"}
                     collapsed={!tabBarVisible}
+                    defaultProfileName={defaultProfile?.name}
                 />
                 <div className="flex-1 flex flex-col min-w-0">
                     <TitleBar
@@ -383,6 +374,14 @@ function App() {
                                 style={{ zIndex: 1 }}
                             >
                                 <SettingsPage theme={currentTheme} />
+                            </div>
+                        )}
+                        {currentId === ABOUT_TAB_ID && (
+                            <div
+                                className="absolute inset-0"
+                                style={{ zIndex: 1 }}
+                            >
+                                <AboutPage theme={currentTheme} />
                             </div>
                         )}
                         {ids.filter((id) => id in terminals).map((id) => (
@@ -406,10 +405,10 @@ function App() {
                                             if (profile) {
                                                 newTerminal(profile);
                                             } else {
-                                                newTerminal(config.profiles[0]);
+                                                newTerminal(defaultProfile);
                                             }
                                         } else {
-                                            newTerminal(config.profiles[0]);
+                                            newTerminal(defaultProfile);
                                         }
                                     }}
                                     onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}

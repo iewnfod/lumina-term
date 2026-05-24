@@ -257,10 +257,15 @@ function GeneralSettings({ borderColor }: { borderColor: string }) {
     const { config, updateConfig } = useGlobalConfig();
     const t = useI18n();
 
+    const currentDefault = useMemo(() => {
+        return config.profiles.find(p => p.default)?.name ?? config.profiles[0]?.name ?? "";
+    }, [config.profiles]);
+
     const [draft, setDraft] = useState({
         language: config.language,
         showTabBar: config.showTabBar ?? false,
         closeWindowOnLastTab: config.closeWindowOnLastTab !== false,
+        defaultProfile: currentDefault,
     });
 
     // Reset draft when config changes externally
@@ -269,21 +274,30 @@ function GeneralSettings({ borderColor }: { borderColor: string }) {
             language: config.language,
             showTabBar: config.showTabBar ?? false,
             closeWindowOnLastTab: config.closeWindowOnLastTab !== false,
+            defaultProfile: currentDefault,
         });
-    }, [config.language, config.showTabBar, config.closeWindowOnLastTab]);
+    }, [config.language, config.showTabBar, config.closeWindowOnLastTab, currentDefault]);
 
     const isDirty =
         draft.language !== config.language ||
         draft.showTabBar !== (config.showTabBar ?? false) ||
-        draft.closeWindowOnLastTab !== (config.closeWindowOnLastTab !== false);
+        draft.closeWindowOnLastTab !== (config.closeWindowOnLastTab !== false) ||
+        draft.defaultProfile !== currentDefault;
 
     const handleSave = () => {
         info("General settings saved");
-        updateConfig({
+        const updated: Partial<typeof config> = {
             language: draft.language,
             showTabBar: draft.showTabBar,
             closeWindowOnLastTab: draft.closeWindowOnLastTab,
-        });
+        };
+        if (draft.defaultProfile !== currentDefault) {
+            updated.profiles = config.profiles.map(p => ({
+                ...p,
+                default: p.name === draft.defaultProfile ? true : p.default ? false : undefined,
+            }));
+        }
+        updateConfig(updated);
     };
 
     return (
@@ -314,6 +328,34 @@ function GeneralSettings({ borderColor }: { borderColor: string }) {
                                 {[...languageNames.keys()].map((lang) => (
                                     <ListBox.Item id={lang} key={lang} textValue={lang}>
                                         {languageNames.get(lang)}
+                                    </ListBox.Item>
+                                ))}
+                            </ListBox>
+                        </Select.Popover>
+                    </Select>
+                </div>
+
+                {/* Default Profile */}
+                <div className="flex flex-col gap-1.5">
+                    <Label>{t["Default Profile"]}</Label>
+                    <Select
+                        selectedKey={draft.defaultProfile}
+                        onSelectionChange={(key) => {
+                            if (key) {
+                                setDraft((prev) => ({ ...prev, defaultProfile: key as string }));
+                            }
+                        }}
+                        className="max-w-xs"
+                    >
+                        <Select.Trigger>
+                            <Select.Value />
+                            <Select.Indicator />
+                        </Select.Trigger>
+                        <Select.Popover>
+                            <ListBox>
+                                {config.profiles.map((p) => (
+                                    <ListBox.Item id={p.name} key={p.name} textValue={p.name}>
+                                        {p.name}
                                     </ListBox.Item>
                                 ))}
                             </ListBox>

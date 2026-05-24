@@ -19,10 +19,11 @@ interface TabBarProps {
     backgroundColor: string;
     foregroundColor: string;
     collapsed: boolean;
+    defaultProfileName?: string;
 }
 
 export default function TabBar(props: TabBarProps) {
-    const { tabs, activeId, onSelect, onClose, onNew, backgroundColor, foregroundColor, collapsed } = props;
+    const { tabs, activeId, onSelect, onClose, onNew, backgroundColor, foregroundColor, collapsed, defaultProfileName } = props;
     const t = useI18n();
 
     const colors = useSurfaceColors(backgroundColor);
@@ -138,7 +139,17 @@ export default function TabBar(props: TabBarProps) {
                     onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                 >
                     <Plus size={16} />
-                    <span className="text-sm">{t["New Tab"]}</span>
+                    <div className="flex flex-col w-full justify-start items-start">
+                        <span className="text-sm">{t["New Tab"]}</span>
+                        {defaultProfileName && (
+                            <div
+                                className="text-xs truncate"
+                                style={{ color: colors.inactiveText, opacity: 0.5 }}
+                            >
+                                {defaultProfileName}
+                            </div>
+                        )}
+                    </div>
                 </button>
             </div>
         </div>

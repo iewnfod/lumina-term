@@ -316,8 +316,9 @@ export default function WelcomePage() {
     const handleFinish = useCallback(() => {
         if (profile) {
             info(`Welcome wizard finished with profile: ${profile.name}`);
+            const defaultProfile = { ...profile, default: true };
             getCurrentWindow().setResizable(true).then(() => {
-                newProfile(profile);
+                newProfile(defaultProfile);
             });
         }
     }, [profile]);
