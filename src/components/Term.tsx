@@ -12,6 +12,8 @@ import {openConfigFile} from "../lib/utils.ts";
 import {useGlobalConfig} from "../hooks/config.tsx";
 import { info, debug } from "@tauri-apps/plugin-log";
 
+let hasAppliedInitialWindowSize = false;
+
 interface TermProps {
     id: string;
     profile: TerminalProfile;
@@ -38,6 +40,7 @@ export default function Term(props : TermProps) {
         dummyDiv.style.top = "-9999px";
         dummyDiv.style.width = "500px";
         dummyDiv.style.height = "500px";
+        dummyDiv.style.fontStyle = profile.fontStyle ?? "normal";
         document.body.appendChild(dummyDiv);
         term.open(dummyDiv);
         // @ts-ignore
@@ -104,8 +107,11 @@ export default function Term(props : TermProps) {
 
         let observer: ResizeObserver | undefined;
 
-        const windowSize = getWindowSizeFromRowsAndColumns();
-        getCurrentWindow().setSize(new LogicalSize(windowSize)).then();
+        if (!hasAppliedInitialWindowSize) {
+            hasAppliedInitialWindowSize = true;
+            const windowSize = getWindowSizeFromRowsAndColumns();
+            getCurrentWindow().setSize(new LogicalSize(windowSize)).then();
+        }
 
         parseProfileTheme(profile).then((theme) => {
             term.current!.options.theme = theme;
@@ -174,7 +180,9 @@ export default function Term(props : TermProps) {
             paddingTop: padding.top,
             paddingBottom: padding.bottom,
         }}>
-            <div ref={termRef} className="w-full h-full overflow-hidden"/>
+            <div ref={termRef} className="w-full h-full overflow-hidden" style={{
+                fontStyle: profile.fontStyle ?? "normal",
+            }}/>
         </div>
     );
 }

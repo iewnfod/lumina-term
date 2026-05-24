@@ -47,17 +47,19 @@ export default function TabBar(props: TabBarProps) {
                     color: foregroundColor,
                 }}
             >
-                <div className="flex flex-row items-center gap-1.5" data-tauri-drag-region>
+                <div className="flex flex-row items-center gap-1.5 h-5" data-tauri-drag-region>
                     {!isMacOS() && (
-                        <img
-                            src={Icon}
-                            alt=""
-                            className="h-5 w-5 pointer-events-none"
-                        />
+                        <>
+                            <img
+                                src={Icon}
+                                alt=""
+                                className="h-5 w-5 pointer-events-none"
+                            />
+                            <span className="text-sm font-medium truncate leading-tight translate-y-px">
+                                Lumina
+                            </span>
+                        </>
                     )}
-                    <span className="text-sm font-medium truncate leading-tight translate-y-px">
-                        Lumina
-                    </span>
                 </div>
             </div>
 

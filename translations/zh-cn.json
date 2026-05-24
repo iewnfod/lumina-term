@@ -52,6 +52,8 @@
     "A profile with this name already exists": "已存在同名配置文件",
     "New Tab": "新建终端",
     "Font Family": "字体",
+    "Font Weight": "字重",
+    "Italic": "斜体",
     "Font Size": "字号",
     "Developer": "开发者",
     "DevTools": "开发者工具",

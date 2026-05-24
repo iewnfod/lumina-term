@@ -89,6 +89,7 @@ export default function TitleBar({
     const fg = theme?.foreground ?? "white";
 
     const { borderColor } = useSurfaceColors(bg);
+    const macOSTitleButtonMarginLeft = tabBarVisible ? 8 : 88;
 
     if (isMacOS()) {
         return (
@@ -102,8 +103,8 @@ export default function TitleBar({
                 }}
             >
                 <button
-                    className="ml-2 p-1 rounded-md hover:bg-white/10 transition-colors cursor-pointer"
-                    style={{ color: fg }}
+                    className="p-1 rounded-md hover:bg-white/10 transition-all duration-300 cursor-pointer"
+                    style={{ color: fg, marginLeft: macOSTitleButtonMarginLeft }}
                     onClick={() => { info(`Tab bar ${tabBarVisible ? "hidden" : "shown"}`); onToggleTabBar(); }}
                 >
                     {tabBarVisible ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}

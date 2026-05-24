@@ -16,7 +16,7 @@ import {
     FileCog,
     Bug,
 } from "lucide-react";
-import { ITheme } from "@xterm/xterm";
+import { ITheme, type FontWeight } from "@xterm/xterm";
 import { useGlobalConfig } from "../hooks/config.tsx";
 import { useI18n, languageNames } from "../hooks/i18n.tsx";
 import { TerminalProfile } from "../types/terminal.ts";
@@ -30,6 +30,7 @@ import { useSurfaceColors } from "../hooks/surfaceColors.ts";
 import { info, debug } from "@tauri-apps/plugin-log";
 
 type SettingsSection = "general" | string;
+const FONT_WEIGHT_OPTIONS: FontWeight[] = ["normal", "bold", "100", "200", "300", "400", "500", "600", "700", "800", "900"];
 
 function SidebarItem({
     children,
@@ -575,6 +576,7 @@ function ProfileEditor({
             name: draft.name.trim(),
             exePath: draft.exePath.trim(),
             fontFamily: draft.fontFamily?.trim() || undefined,
+            fontStyle: draft.fontStyle === "italic" ? "italic" : "normal",
             themePath: draft.themePath?.trim() || undefined,
         };
         const newName = trimmed.name;
@@ -724,6 +726,49 @@ function ProfileEditor({
                             className="max-w-sm"
                             placeholder="e.g. JetBrains Mono"
                         />
+                    </div>
+
+                    {/* Font Weight and Style */}
+                    <div className="flex flex-row gap-4 items-end">
+                        <div className="flex flex-col gap-1.5">
+                            <Label>{t["Font Weight"]}</Label>
+                            <Select
+                                selectedKey={String(draft.fontWeight ?? "normal")}
+                                onSelectionChange={(key) => {
+                                    if (key) {
+                                        updateDraft({ fontWeight: key as FontWeight });
+                                    }
+                                }}
+                                className="w-32"
+                            >
+                                <Select.Trigger>
+                                    <Select.Value />
+                                    <Select.Indicator />
+                                </Select.Trigger>
+                                <Select.Popover>
+                                    <ListBox>
+                                        {FONT_WEIGHT_OPTIONS.map((weight) => (
+                                            <ListBox.Item id={String(weight)} key={String(weight)} textValue={String(weight)}>
+                                                {String(weight)}
+                                            </ListBox.Item>
+                                        ))}
+                                    </ListBox>
+                                </Select.Popover>
+                            </Select>
+                        </div>
+                        <div className="flex flex-row items-center gap-3 pb-1">
+                            <Label className="cursor-pointer">{t["Italic"]}</Label>
+                            <Switch
+                                isSelected={draft.fontStyle === "italic"}
+                                onChange={(isSelected) =>
+                                    updateDraft({ fontStyle: isSelected ? "italic" : "normal" })
+                                }
+                            >
+                                <Switch.Control>
+                                    <Switch.Thumb />
+                                </Switch.Control>
+                            </Switch>
+                        </div>
                     </div>
 
                     {/* Font Size */}

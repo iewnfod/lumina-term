@@ -52,6 +52,8 @@
     "A profile with this name already exists": "A profile with this name already exists",
     "New Tab": "New Tab",
     "Font Family": "Font Family",
+    "Font Weight": "Font Weight",
+    "Italic": "Italic",
     "Font Size": "Font Size",
     "Developer": "Developer",
     "DevTools": "DevTools",

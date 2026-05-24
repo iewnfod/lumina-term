@@ -7,4 +7,5 @@ export interface TerminalProfile extends ITerminalOptions {
     default?: boolean;
     padding?: number | {x?: number, y?: number, left?: number, right?: number, top?: number, bottom?: number};
     themePath?: string;
+    fontStyle?: "normal" | "italic";
 }
