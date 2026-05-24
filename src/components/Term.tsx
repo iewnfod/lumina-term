@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useMemo, useRef} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {Terminal} from "@xterm/xterm";
 import {listen} from "@tauri-apps/api/event";
 import {invoke} from "@tauri-apps/api/core";
@@ -11,6 +11,7 @@ import {Actions} from "../types/config.ts";
 import {openConfigFile} from "../lib/utils.ts";
 import {useGlobalConfig} from "../hooks/config.tsx";
 import { info, debug } from "@tauri-apps/plugin-log";
+import {getCurrentWebview} from "@tauri-apps/api/webview";
 
 let hasAppliedInitialWindowSize = false;
 
@@ -31,6 +32,9 @@ export default function Term(props : TermProps) {
     const isInitialized = useRef<boolean>(false);
     const padding = useMemo(() => parseProfilePadding(profile), [profile]);
     const {config} = useGlobalConfig();
+    const [isDragOver, setIsDragOver] = useState(false);
+    const isActiveRef = useRef(isActive);
+    isActiveRef.current = isActive;
 
     const getWindowSizeFromRowsAndColumns = useCallback(() => {
         const term = new Terminal({...profile});
@@ -93,6 +97,39 @@ export default function Term(props : TermProps) {
     // Keep onClose ref fresh for the term-exit listener (avoid stale closure)
     const onCloseRef = useRef(props.onClose);
     onCloseRef.current = props.onClose;
+
+    // Drag-and-drop: insert file path into terminal
+    const lastDropRef = useRef(0);
+    useEffect(() => {
+        let unlistenFn: (() => void) | undefined;
+
+        getCurrentWebview().onDragDropEvent((event) => {
+            if (!isActiveRef.current) return;
+
+            if (event.payload.type === 'enter' || event.payload.type === 'over') {
+                setIsDragOver(true);
+            } else if (event.payload.type === 'drop') {
+                setIsDragOver(false);
+                if (event.payload.paths.length > 0) {
+                    const now = Date.now();
+                    if (now - lastDropRef.current < 200) return;
+                    lastDropRef.current = now;
+                    const filePaths = event.payload.paths.map(p =>
+                        p.includes(' ') ? `"${p}"` : p
+                    ).join(' ');
+                    invoke("write_to_terminal", {id, content: filePaths + ' '}).then();
+                }
+            } else if (event.payload.type === 'leave') {
+                setIsDragOver(false);
+            }
+        }).then((fn) => {
+            unlistenFn = fn;
+        });
+
+        return () => {
+            unlistenFn?.();
+        };
+    }, [id]);
 
     // Initialize terminal
     useEffect(() => {
@@ -174,7 +211,7 @@ export default function Term(props : TermProps) {
     }, [isActive]);
 
     return (
-        <div className="w-full h-full overflow-hidden" style={{
+        <div className="w-full h-full overflow-hidden relative" style={{
             paddingLeft: padding.left,
             paddingRight: padding.right,
             paddingTop: padding.top,
@@ -183,6 +220,13 @@ export default function Term(props : TermProps) {
             <div ref={termRef} className="w-full h-full overflow-hidden" style={{
                 fontStyle: profile.fontStyle ?? "normal",
             }}/>
+            {isDragOver && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-blue-500/20 border-2 border-blue-400 border-dashed pointer-events-none">
+                    <div className="bg-black/70 text-white px-4 py-2 rounded-lg text-sm">
+                        Drop file to insert path
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
