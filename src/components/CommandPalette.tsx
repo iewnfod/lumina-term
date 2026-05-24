@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { isMacOS } from "../lib/utils.ts";
 import { useI18n } from "../hooks/i18n.tsx";
+import { info, debug } from "@tauri-apps/plugin-log";
 
 export interface CommandAction {
     id: string;
@@ -73,6 +74,7 @@ export default function CommandPalette({ isOpen, onOpenChange, actions }: Comman
     // Reset state when modal opens/closes
     useEffect(() => {
         if (isOpen) {
+            debug("Command palette opened");
             setQuery("");
             setSelectedIndex(0);
             // Focus the search input after a short delay for the modal animation
@@ -98,6 +100,7 @@ export default function CommandPalette({ isOpen, onOpenChange, actions }: Comman
         (index: number) => {
             const action = flatActions[index];
             if (action) {
+                info(`Command palette action selected: ${action.label}`);
                 action.onSelect();
                 onOpenChange(false);
             }

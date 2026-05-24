@@ -5,27 +5,32 @@ import {useEffect, useState} from "react";
 import {ITheme} from "@xterm/xterm";
 import {isMacOS} from "../lib/utils.ts";
 import {useSurfaceColors} from "../hooks/surfaceColors.ts";
+import { info } from "@tauri-apps/plugin-log";
 
 function WindowControl() {
     const [isMaximized, setIsMaximized] = useState(false);
 
     const handleMinimize = () => {
+        info("Window minimized");
         getCurrentWindow().minimize().then();
     }
 
     const handleMaximize = () => {
+        info("Window maximized");
         getCurrentWindow().maximize().then(() => {
             getIsMaximized();
         });
     }
 
     const handleUnmaximize = () => {
+        info("Window unmaximized");
         getCurrentWindow().unmaximize().then(() => {
             getIsMaximized();
         });
     }
 
     const handleClose = () => {
+        info("Window close requested");
         getCurrentWindow().close().then();
     }
 
@@ -99,7 +104,7 @@ export default function TitleBar({
                 <button
                     className="ml-2 p-1 rounded-md hover:bg-white/10 transition-colors cursor-pointer"
                     style={{ color: fg }}
-                    onClick={onToggleTabBar}
+                    onClick={() => { info(`Tab bar ${tabBarVisible ? "hidden" : "shown"}`); onToggleTabBar(); }}
                 >
                     {tabBarVisible ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
                 </button>
@@ -107,7 +112,7 @@ export default function TitleBar({
                 <button
                     className="mr-2 p-1 rounded-md hover:bg-white/10 transition-colors cursor-pointer"
                     style={{ color: fg }}
-                    onClick={onOpenSettings}
+                    onClick={() => { info("Settings opened from title bar"); onOpenSettings(); }}
                 >
                     <Settings size={18} />
                 </button>
@@ -128,7 +133,7 @@ export default function TitleBar({
             <button
                 className="ml-2 p-1 rounded-md hover:bg-white/10 transition-colors cursor-pointer"
                 style={{ color: fg }}
-                onClick={onToggleTabBar}
+                onClick={() => { info(`Tab bar ${tabBarVisible ? "hidden" : "shown"}`); onToggleTabBar(); }}
             >
                 {tabBarVisible ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
             </button>
@@ -137,7 +142,7 @@ export default function TitleBar({
                 <button
                     className="p-1 rounded-md hover:bg-white/10 transition-colors cursor-pointer"
                     style={{ color: fg }}
-                    onClick={onOpenSettings}
+                    onClick={() => { info("Settings opened from title bar"); onOpenSettings(); }}
                 >
                     <Settings size={18} />
                 </button>

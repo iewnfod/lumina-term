@@ -10,6 +10,7 @@ import {loadBindings, parseBindings} from "../lib/bindings.ts";
 import {Actions} from "../types/config.ts";
 import {openConfigFile} from "../lib/utils.ts";
 import {useGlobalConfig} from "../hooks/config.tsx";
+import { info, debug } from "@tauri-apps/plugin-log";
 
 interface TermProps {
     id: string;
@@ -49,7 +50,7 @@ export default function Term(props : TermProps) {
         const charSizeService = (term as any)._core?._charSizeService;
         let charWidth = renderDimensions?.actualCellWidth || charSizeService?.width;
         let charHeight = renderDimensions?.actualCellHeight || charSizeService?.height;
-        console.log(charWidth, charHeight);
+        debug(`Char size measured: ${charWidth}x${charHeight}`);
         term.dispose();
         let widthOffset = 0; let heightOffset = 0;
         if (termRef.current) {
@@ -63,6 +64,7 @@ export default function Term(props : TermProps) {
     }, [profile]);
 
     const handleActions = (action: Actions, args?: Record<string, string>) => {
+        info(`Term action: ${action}${args ? ` args=${JSON.stringify(args)}` : ""}`);
         switch (action) {
             case "closeTab":
                 props.onClose?.();
@@ -121,16 +123,14 @@ export default function Term(props : TermProps) {
         if (termRef.current) {
             term.current.open(termRef.current);
             fitAddon.fit();
-            console.log("FitAddon loaded");
+            debug(`Terminal opened: id=${id}`);
         }
 
         term.current.onData((data) => {
             invoke("write_to_terminal", {id, content: data}).then();
         });
         term.current.onResize(({cols, rows}) => {
-            invoke("resize_terminal", {id, cols, rows}).then(() => {
-                console.log("Resizing terminal");
-            });
+            invoke("resize_terminal", {id, cols, rows}).then();
         });
         listen<string>(`term-write-${id}`, (event) => {
             if (term.current && event.payload) {
@@ -141,16 +141,14 @@ export default function Term(props : TermProps) {
                 id,
                 ...profile,
             }).then(() => {
-                console.log("Starting terminal", id);
+                info(`Terminal started: id=${id} profile=${profile.name}`);
                 invoke("resize_terminal", {id, cols: term.current!.cols, rows: term.current!.rows}).then();
             });
         });
 
         listen(`term-exit-${id}`, () => {
-            console.log("[DEBUG] Received term-exit event for", id);
-            console.log("[DEBUG] onClose function:", typeof props.onClose);
+            info(`Terminal exited: id=${id}`);
             props.onClose?.();
-            console.log("[DEBUG] onClose called for", id);
         });
 
         const handleResize = () => {

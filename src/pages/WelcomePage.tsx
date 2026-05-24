@@ -9,6 +9,7 @@ import {open} from "@tauri-apps/plugin-dialog";
 import {invoke} from "@tauri-apps/api/core";
 import Confetti from "react-confetti-boom";
 import {platform} from "@tauri-apps/plugin-os";
+import { info, debug } from "@tauri-apps/plugin-log";
 
 function Step1({onNext} : {
     onNext: () => void;
@@ -43,10 +44,13 @@ function Step1({onNext} : {
                         <Select
                             value={config.language}
                             variant="secondary"
-                            onChange={(value) => updateConfig({
-                                // @ts-ignore
-                                language: value ?? config.language
-                            })}
+                            onChange={(value) => {
+                                updateConfig({
+                                    // @ts-ignore
+                                    language: value ?? config.language
+                                });
+                                info(`Welcome wizard language changed to: ${value}`);
+                            }}
                         >
                             <Label>{t["Language"]}</Label>
                             <Select.Trigger>
@@ -137,6 +141,7 @@ function Step2({onNext, onPrev} : {
             ] : []
         });
         if (exe) {
+            info(`Welcome wizard exe path selected: ${exe}`);
             onExePathChange(exe);
         }
     };
@@ -297,15 +302,20 @@ export default function WelcomePage() {
     }, []);
 
     const handleNext = () => {
-        setStep((prevState) => Math.min(prevState + 1, totalStep-1));
+        const nextStep = Math.min(step + 1, totalStep-1);
+        debug(`Welcome wizard: step ${step} -> ${nextStep}`);
+        setStep(nextStep);
     }
 
     const handlePrev = () => {
-        setStep((prevState) => Math.max(prevState - 1, 0));
+        const prevStep = Math.max(step - 1, 0);
+        debug(`Welcome wizard: step ${step} -> ${prevStep}`);
+        setStep(prevStep);
     }
 
     const handleFinish = useCallback(() => {
         if (profile) {
+            info(`Welcome wizard finished with profile: ${profile.name}`);
             getCurrentWindow().setResizable(true).then(() => {
                 newProfile(profile);
             });

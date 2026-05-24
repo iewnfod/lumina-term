@@ -5,6 +5,7 @@ import {TerminalProfile} from "../types/terminal.ts";
 import {getCurrentWindow} from "@tauri-apps/api/window";
 import {CONFIG_SAVE_PATH, DEFAULT_CONFIG} from "../constants.ts";
 import {isMacOS} from "../lib/utils.ts";
+import { info, debug } from "@tauri-apps/plugin-log";
 
 const store = new LazyStore(CONFIG_SAVE_PATH);
 
@@ -31,6 +32,7 @@ export function GlobalConfigProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         const loadConfig = async () => {
+            info("Loading config...");
             const savedConfig = await store.get<GlobalConfig>("config");
             let loadedConfig = DEFAULT_CONFIG;
             if (savedConfig) {
@@ -38,6 +40,7 @@ export function GlobalConfigProvider({ children }: { children: ReactNode }) {
             }
             setConfig(loadedConfig);
             store.set("config", loadedConfig).then();
+            info(`Config loaded: language=${loadedConfig.language}, profiles=${loadedConfig.profiles.length}`);
             setIsLoading(false);
         };
         loadConfig().then();
@@ -50,7 +53,7 @@ export function GlobalConfigProvider({ children }: { children: ReactNode }) {
     };
 
     const updateConfig = (newConfig: Partial<GlobalConfig>) => {
-        console.log("updateConfig", newConfig);
+        debug(`updateConfig: ${JSON.stringify(newConfig)}`);
         setConfig((prevState) => {
             const updated: GlobalConfig = {...prevState, ...newConfig};
             saveConfig(updated);
@@ -72,7 +75,7 @@ export function GlobalConfigProvider({ children }: { children: ReactNode }) {
             const window = getCurrentWindow();
             window.show().then(() => {
                 window.setFocus().then();
-                console.log("Data loaded");
+                info("Window shown, config loaded");
             });
         }
     }, [isLoading]);

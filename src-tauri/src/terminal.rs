@@ -22,7 +22,7 @@ pub fn start_terminal(
             .try_lock()
             .expect("Failed to lock terminals");
         if terminals.contains_key(&id) {
-            println!("Terminal with id {} already exists", id);
+            log::warn!("Terminal with id {} already exists", id);
             return;
         }
     }
@@ -70,12 +70,12 @@ pub fn start_terminal(
     let app_reader = app.clone();
     let id_reader = id.clone();
     thread::spawn(move || {
-        println!("[DEBUG] Reader thread started for {}", id_reader);
+        log::debug!("Reader thread started for {}", id_reader);
         let mut buffer = [0u8; 1024];
         loop {
             match reader.read(&mut buffer) {
                 Ok(0) => {
-                    println!("[DEBUG] Terminal {} reader got EOF", id_reader);
+                    log::debug!("Terminal {} reader got EOF", id_reader);
                     break;
                 }
                 Ok(n) => {
@@ -85,12 +85,12 @@ pub fn start_terminal(
                     }
                 }
                 Err(e) => {
-                    eprintln!("[DEBUG] Terminal {} reader error: {}", id_reader, e);
+                    log::error!("Terminal {} reader error: {}", id_reader, e);
                     break;
                 }
             }
         }
-        println!("[DEBUG] Reader thread ended for {}", id_reader);
+        log::debug!("Reader thread ended for {}", id_reader);
     });
 
     // Watcher thread: polls child process exit, then cleans up
@@ -99,7 +99,7 @@ pub fn start_terminal(
     let state_watcher = state.inner().clone();
     let id_watcher = id.clone();
     thread::spawn(move || {
-        println!("[DEBUG] Watcher thread started for {}", id_watcher);
+        log::debug!("Watcher thread started for {}", id_watcher);
         loop {
             let exited = {
                 let mut child_guard = shared_child
@@ -107,12 +107,15 @@ pub fn start_terminal(
                     .expect("Failed to lock child in watcher");
                 match child_guard.try_wait() {
                     Ok(Some(status)) => {
-                        println!("[DEBUG] Child process {} exited with {:?}", id_watcher, status);
+                        log::info!(
+                            "Child process {} exited with {:?}",
+                            id_watcher, status
+                        );
                         true
                     }
                     Ok(None) => false,
                     Err(e) => {
-                        eprintln!("[DEBUG] Child process {} wait error: {}", id_watcher, e);
+                        log::error!("Child process {} wait error: {}", id_watcher, e);
                         true
                     }
                 }
@@ -124,22 +127,26 @@ pub fn start_terminal(
         }
 
         // Clean up terminal state
-        println!("[DEBUG] Cleaning up state for terminal {}", id_watcher);
+        log::debug!("Cleaning up state for terminal {}", id_watcher);
         {
             let mut terminals = state_watcher
                 .terminals
                 .try_lock()
                 .expect("Failed to lock terminals in watcher");
             let removed = terminals.remove(&id_watcher);
-            println!("[DEBUG] Terminal {} removed from state: {:?}", id_watcher, removed.is_some());
+            log::debug!(
+                "Terminal {} removed from state: {:?}",
+                id_watcher,
+                removed.is_some()
+            );
         }
 
         // Notify frontend
-        println!("[DEBUG] Emitting term-exit event for {}", id_watcher);
+        log::debug!("Emitting term-exit event for {}", id_watcher);
         app_watcher
             .emit(&term_exit_event_name, ())
             .expect("Failed to emit exit event");
-        println!("[DEBUG] term-exit event emitted for {}", id_watcher);
+        log::debug!("term-exit event emitted for {}", id_watcher);
     });
 }
 
@@ -150,12 +157,13 @@ pub fn kill_terminal(id: String, state: State<TerminalState>) {
         .try_lock()
         .expect("Failed to lock terminals");
     if let Some((_, shared_child, _)) = terminals.remove(&id) {
+        log::info!("Killing terminal {}", id);
         let mut child = shared_child
             .try_lock()
             .expect("Failed to lock child in kill_terminal");
         let _ = child.kill();
     } else {
-        println!("Terminal with id {} not found", id);
+        log::warn!("Terminal with id {} not found", id);
     }
 }
 
@@ -186,10 +194,6 @@ pub fn resize_terminal(id: String, cols: u16, rows: u16, state: State<TerminalSt
             pixel_width: 0,
             pixel_height: 0,
         };
-        println!(
-            "Resizing terminal {} to {} cols and {} rows",
-            id, cols, rows
-        );
         pty_pair
             .master
             .resize(size)

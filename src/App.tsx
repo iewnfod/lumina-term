@@ -17,6 +17,7 @@ import {bindingToShortcut, findBinding, parseBindings} from "./lib/bindings.ts";
 import {X, PanelLeftClose, PanelLeftOpen, Terminal as TerminalIcon, Monitor, MonitorOff, Settings as SettingsIcon} from "lucide-react";
 import SettingsPage from "./pages/SettingsPage.tsx";
 import {SETTINGS_TAB_ID} from "./constants.ts";
+import { info, debug, error } from "@tauri-apps/plugin-log";
 
 function App() {
     const {config, updateConfig} = useGlobalConfig();
@@ -48,20 +49,22 @@ function App() {
         });
         setIds((prevState) => [...prevState, id]);
         setCurrentId(id);
-        console.log("New Terminal Profile", profile.name, id);
+        info(`New terminal: profile=${profile.name} id=${id}`);
     };
 
     const closeTerminal = (id: string) => {
-        console.log("[DEBUG] closeTerminal called for", id);
+        debug(`closeTerminal called for id=${id}`);
 
         // Settings tab: no PTY process, just remove from list
         if (id === SETTINGS_TAB_ID) {
+            info("Closing settings tab");
             const newIds = ids.filter((i) => i !== id);
             let newCurrentId = currentId;
             if (currentId === id) {
                 if (newIds.length > 0) {
                     newCurrentId = newIds[newIds.length - 1];
                 } else if (closeOnLastTabRef.current !== false) {
+                    info("No tabs left, closing window");
                     getCurrentWindow().close().then();
                     return;
                 }
@@ -72,7 +75,7 @@ function App() {
         }
         // Kill the PTY process on the backend
         invoke("kill_terminal", {id}).catch((e) =>
-            console.error("Failed to kill terminal:", e)
+            error(`Failed to kill terminal: ${e}`)
         );
 
         // Compute new ID list
@@ -86,7 +89,7 @@ function App() {
                 newCurrentId = newIds[Math.min(idx, newIds.length - 1)];
             } else if (closeOnLastTabRef.current !== false) {
                 // No tabs left, close the window (default behavior)
-                console.log("[DEBUG] No tabs left, closing window");
+                info("No tabs left after close, closing window");
                 getCurrentWindow().close().then();
                 return;
             }
@@ -100,14 +103,16 @@ function App() {
         });
         setIds(newIds);
         setCurrentId(newCurrentId);
-        console.log("[DEBUG] closeTerminal done, newIds:", newIds, "newCurrentId:", newCurrentId);
+        info(`Terminal closed: id=${id}, remaining=${newIds.length}`);
     };
 
     const switchTab = (id: string) => {
+        debug(`Switch tab to ${id}`);
         setCurrentId(id);
     };
 
     const openSettings = useCallback(() => {
+        info("Opening settings");
         if (ids.includes(SETTINGS_TAB_ID)) {
             setCurrentId(SETTINGS_TAB_ID);
             return;
@@ -169,6 +174,7 @@ function App() {
                 if (allMatch) {
                     e.preventDefault();
                     e.stopPropagation();
+                    info(`Keybinding action from settings: ${binding.action}`);
                     switch (binding.action) {
                         case "closeTab":
                             closeTerminal(SETTINGS_TAB_ID);

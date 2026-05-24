@@ -24,8 +24,10 @@ import { openConfigFile, getConfigFilePath } from "../lib/utils.ts";
 import { parseProfileTheme } from "../lib/term.ts";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
+import { openPath } from "@tauri-apps/plugin-opener";
 import { platform } from "@tauri-apps/plugin-os";
 import { useSurfaceColors } from "../hooks/surfaceColors.ts";
+import { info, debug } from "@tauri-apps/plugin-log";
 
 type SettingsSection = "general" | string;
 
@@ -71,12 +73,18 @@ export default function SettingsPage({ theme }: { theme: ITheme | null }) {
     const [selectedSection, setSelectedSection] = useState<SettingsSection>("general");
     const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
+    const handleSectionChange = (section: SettingsSection) => {
+        debug(`Settings section changed to: ${section}`);
+        setSelectedSection(section);
+    };
+
     const bg = theme?.background ?? "#000000";
     const fg = theme?.foreground ?? "#ffffff";
     const colors = useSurfaceColors(bg);
 
     const handleDeleteProfile = useCallback(
         (name: string) => {
+            info(`Profile deleted: ${name}`);
             const newProfiles = config.profiles.filter((p) => p.name !== name);
             updateConfig({ profiles: newProfiles });
             if (selectedSection === name) {
@@ -95,6 +103,7 @@ export default function SettingsPage({ theme }: { theme: ITheme | null }) {
             name = `${baseName} ${i}`;
             i++;
         }
+        info(`Profile added: ${name}`);
         const profile: TerminalProfile = {
             name,
             exePath: "",
@@ -119,7 +128,7 @@ export default function SettingsPage({ theme }: { theme: ITheme | null }) {
                     {/* General */}
                     <SidebarItem
                         isSelected={selectedSection === "general"}
-                        onClick={() => setSelectedSection("general")}
+                        onClick={() => handleSectionChange("general")}
                         colors={colors}
                     >
                         <div className="flex items-center gap-2">
@@ -143,7 +152,7 @@ export default function SettingsPage({ theme }: { theme: ITheme | null }) {
                         <SidebarItem
                             key={profile.name}
                             isSelected={selectedSection === profile.name}
-                            onClick={() => setSelectedSection(profile.name)}
+                            onClick={() => handleSectionChange(profile.name)}
                             colors={colors}
                         >
                             <span className="truncate">{profile.name}</span>
@@ -161,7 +170,7 @@ export default function SettingsPage({ theme }: { theme: ITheme | null }) {
 
                     <SidebarItem
                         isSelected={selectedSection === "developer"}
-                        onClick={() => setSelectedSection("developer")}
+                        onClick={() => handleSectionChange("developer")}
                         colors={colors}
                     >
                         <div className="flex items-center gap-2">
@@ -269,6 +278,7 @@ function GeneralSettings({ borderColor }: { borderColor: string }) {
         draft.closeWindowOnLastTab !== (config.closeWindowOnLastTab !== false);
 
     const handleSave = () => {
+        info("General settings saved");
         updateConfig({
             language: draft.language,
             showTabBar: draft.showTabBar,
@@ -367,10 +377,12 @@ function GeneralSettings({ borderColor }: { borderColor: string }) {
 function DeveloperSettings() {
     const t = useI18n();
     const [configPath, setConfigPath] = useState("");
+    const [logDir, setLogDir] = useState("");
     const [isDebug, setIsDebug] = useState(false);
 
     useEffect(() => {
         getConfigFilePath().then(setConfigPath).catch(() => setConfigPath(""));
+        invoke<string>("get_log_dir").then(setLogDir).catch(() => setLogDir(""));
         invoke<boolean>("is_debug").then(setIsDebug).catch(() => setIsDebug(false));
     }, []);
 
@@ -393,6 +405,31 @@ function DeveloperSettings() {
                             size="sm"
                             className="shrink-0"
                             onPress={() => openConfigFile().catch(console.error)}
+                        >
+                            <FolderOpen size={15} />
+                            {t["Open"]}
+                        </Button>
+                    </div>
+
+                    {/* Log Directory */}
+                    <div className="flex flex-row justify-between items-center w-full">
+                        <div className="flex flex-col gap-1.5">
+                            <Label>{t["Log Directory"]}</Label>
+                            <p className="text-xs text-muted truncate flex-1" title={logDir}>
+                                {logDir || "—"}
+                            </p>
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0"
+                            onPress={() => {
+                                if (logDir) {
+                                    openPath(logDir).catch(() => {
+                                        debug(`Failed to open log directory: ${logDir}`);
+                                    });
+                                }
+                            }}
                         >
                             <FolderOpen size={15} />
                             {t["Open"]}
@@ -490,6 +527,7 @@ function ProfileEditor({
     const handleSave = () => {
         if (!draft) return;
         const oldName = profile.name;
+        info(`Profile saved: ${oldName}`);
         const trimmed: TerminalProfile = {
             ...draft,
             name: draft.name.trim(),
@@ -525,6 +563,7 @@ function ProfileEditor({
                     : [],
         });
         if (exe) {
+            info(`Profile exe path selected: ${exe}`);
             updateDraft({ exePath: exe });
         }
     };

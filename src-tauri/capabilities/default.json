@@ -26,12 +26,13 @@
       "identifier": "opener:allow-open-path",
       "allow": [
         {
-          "path": "$APPDATA/**"
+            "path": "$HOME/**"
         }
       ]
     },
     "os:default",
     "core:window:allow-set-focus",
-    "core:window:allow-set-decorations"
+    "core:window:allow-set-decorations",
+    "log:default"
   ]
 }
