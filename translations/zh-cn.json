@@ -35,5 +35,22 @@
     "Select": "选择",
     "Close": "关闭",
     "New {name}": "新建 {name}",
-    "Create a new terminal with profile \"{name}\"": "使用配置 \"{name}\" 新建一个终端"
+    "Create a new terminal with profile \"{name}\"": "使用配置 \"{name}\" 新建一个终端",
+    "Settings": "设置",
+    "General": "常规",
+    "Add Profile": "添加配置",
+    "Delete Profile": "删除配置",
+    "Profiles": "配置文件",
+    "Delete": "删除",
+    "Cancel": "取消",
+    "Save": "保存",
+    "Padding": "内边距",
+    "Theme Path": "主题路径",
+    "Open Config File": "打开配置文件",
+    "Are you sure you want to delete this profile?": "确定要删除此配置文件吗？",
+    "This action cannot be undone.": "此操作无法撤销。",
+    "A profile with this name already exists": "已存在同名配置文件",
+    "New Tab": "新建终端",
+    "Font Family": "字体",
+    "Font Size": "字号"
 }

@@ -11,9 +11,12 @@ import {ITheme} from "@xterm/xterm";
 import {parseProfileTheme} from "./lib/term.ts";
 import {invoke} from "@tauri-apps/api/core";
 import CommandPalette, {CommandAction} from "./components/CommandPalette.tsx";
-import {isMacOS, openConfigFile} from "./lib/utils.ts";
+import {isMacOS} from "./lib/utils.ts";
+import {isColorDark} from "./hooks/surfaceColors.ts";
 import {bindingToShortcut, findBinding, parseBindings} from "./lib/bindings.ts";
-import {X, FileCog, PanelLeftClose, PanelLeftOpen, Terminal as TerminalIcon, Monitor, MonitorOff} from "lucide-react";
+import {X, PanelLeftClose, PanelLeftOpen, Terminal as TerminalIcon, Monitor, MonitorOff, Settings as SettingsIcon} from "lucide-react";
+import SettingsPage from "./pages/SettingsPage.tsx";
+import {SETTINGS_TAB_ID} from "./constants.ts";
 
 function App() {
     const {config, updateConfig} = useGlobalConfig();
@@ -50,6 +53,23 @@ function App() {
 
     const closeTerminal = (id: string) => {
         console.log("[DEBUG] closeTerminal called for", id);
+
+        // Settings tab: no PTY process, just remove from list
+        if (id === SETTINGS_TAB_ID) {
+            const newIds = ids.filter((i) => i !== id);
+            let newCurrentId = currentId;
+            if (currentId === id) {
+                if (newIds.length > 0) {
+                    newCurrentId = newIds[newIds.length - 1];
+                } else if (closeOnLastTabRef.current !== false) {
+                    getCurrentWindow().close().then();
+                    return;
+                }
+            }
+            setIds(newIds);
+            setCurrentId(newCurrentId);
+            return;
+        }
         // Kill the PTY process on the backend
         invoke("kill_terminal", {id}).catch((e) =>
             console.error("Failed to kill terminal:", e)
@@ -87,6 +107,15 @@ function App() {
         setCurrentId(id);
     };
 
+    const openSettings = useCallback(() => {
+        if (ids.includes(SETTINGS_TAB_ID)) {
+            setCurrentId(SETTINGS_TAB_ID);
+            return;
+        }
+        setIds((prevState) => [...prevState, SETTINGS_TAB_ID]);
+        setCurrentId(SETTINGS_TAB_ID);
+    }, [ids]);
+
     useEffect(() => {
         if (isInitialized.current) return;
         if (config.profiles.length && ids.length === 0) {
@@ -104,8 +133,63 @@ function App() {
         }
     }, [currentProfile]);
 
-    // Block browser default actions for all user-configured keyboard bindings
-    // so the WebView doesn't steal key events before xterm gets to handle them.
+    // Sync HeroUI theme class with terminal theme
+    useEffect(() => {
+        const bg = currentTheme?.background;
+        if (!bg) return;
+        const dark = isColorDark(bg);
+        const root = document.documentElement;
+        root.classList.toggle("dark", dark);
+        root.classList.toggle("light", !dark);
+        root.setAttribute("data-theme", dark ? "dark" : "light");
+    }, [currentTheme?.background]);
+
+    // Handle keyboard bindings when settings page is active (no xterm to dispatch)
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (currentId !== SETTINGS_TAB_ID) return;
+
+            for (const binding of parsedBindings) {
+                const eventKey = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+                const bindingKey = binding.key.length === 1 ? binding.key.toLowerCase() : binding.key;
+                if (eventKey !== bindingKey) continue;
+
+                let allMatch = true;
+                for (const w of binding.with) {
+                    switch (w) {
+                        case "ctrl": allMatch = allMatch && e.ctrlKey; break;
+                        case "shift": allMatch = allMatch && e.shiftKey; break;
+                        case "alt": allMatch = allMatch && e.altKey; break;
+                        case "command": allMatch = allMatch && e.metaKey; break;
+                        case "CtrlOrCommand": allMatch = allMatch && (isMacOS() ? e.metaKey : e.ctrlKey); break;
+                    }
+                    if (!allMatch) break;
+                }
+
+                if (allMatch) {
+                    e.preventDefault();
+                    switch (binding.action) {
+                        case "closeTab":
+                            closeTerminal(SETTINGS_TAB_ID);
+                            break;
+                        case "newTab":
+                            newTerminal(config.profiles[0]);
+                            break;
+                        case "openSettings":
+                            openSettings();
+                            break;
+                        case "openCommandPalette":
+                            setIsCommandPaletteOpen(true);
+                            break;
+                    }
+                    return;
+                }
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [currentId, parsedBindings, config.profiles]);
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             for (const binding of parsedBindings) {
@@ -223,22 +307,22 @@ function App() {
         });
 
         // Open settings
-        const settingsBinding = findBinding(parsedBindings, "openConfigFile");
+        const settingsBinding = findBinding(parsedBindings, "openSettings");
         actions.push({
             id: "open-settings",
-            label: t["Open Settings"],
-            description: t["Open the configuration file"],
-            icon: <FileCog size={18} />,
+            label: t["Settings"],
+            description: t["Open Settings"],
+            icon: <SettingsIcon size={18} />,
             shortcut: settingsBinding ? bindingToShortcut(settingsBinding) : undefined,
             category: t["Settings"],
             keywords: ["settings", "设置", "config", "配置", "preferences", "options"],
             onSelect: () => {
-                openConfigFile().catch(console.error);
+                openSettings();
             },
         });
 
         return actions;
-    }, [config.profiles, currentId, tabBarVisible, config.closeWindowOnLastTab, parsedBindings, t]);
+    }, [config.profiles, currentId, tabBarVisible, config.closeWindowOnLastTab, parsedBindings, t, openSettings]);
 
     // Close command palette when Escape is pressed while it's open
     const handleCommandPaletteOpenChange = useCallback((open: boolean) => {
@@ -247,8 +331,16 @@ function App() {
 
     if (config.profiles.length) {
         const tabs = ids
-            .filter((id) => id in terminals)
-            .map((id) => ({id, name: terminals[id].name}));
+            .map((id) => {
+                if (id === SETTINGS_TAB_ID) {
+                    return { id, name: t["Settings"] };
+                }
+                if (id in terminals) {
+                    return { id, name: terminals[id].name };
+                }
+                return null;
+            })
+            .filter(Boolean) as { id: string; name: string }[];
 
         return (
             <div
@@ -277,6 +369,14 @@ function App() {
                         onToggleTabBar={() => updateConfig({ showTabBar: !tabBarVisible })}
                     />
                     <div className="flex-1 relative overflow-hidden">
+                        {currentId === SETTINGS_TAB_ID && (
+                            <div
+                                className="absolute inset-0"
+                                style={{ zIndex: 1 }}
+                            >
+                                <SettingsPage theme={currentTheme} />
+                            </div>
+                        )}
                         {ids.filter((id) => id in terminals).map((id) => (
                             <div
                                 key={id}
@@ -305,6 +405,7 @@ function App() {
                                         }
                                     }}
                                     onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+                                    onOpenSettings={openSettings}
                                 />
                             </div>
                         ))}

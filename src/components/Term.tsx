@@ -18,6 +18,7 @@ interface TermProps {
     onClose?: () => void;
     onNewTab?: (profileName?: string) => void;
     onOpenCommandPalette?: () => void;
+    onOpenSettings?: () => void;
 }
 
 export default function Term(props : TermProps) {
@@ -74,6 +75,9 @@ export default function Term(props : TermProps) {
                 break;
             case "openCommandPalette":
                 props.onOpenCommandPalette?.();
+                break;
+            case "openSettings":
+                props.onOpenSettings?.();
                 break;
         }
     };

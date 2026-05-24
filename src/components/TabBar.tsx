@@ -1,7 +1,9 @@
-import { Plus, X } from "lucide-react";
-import { useMemo } from "react";
+import { Plus, X, Settings } from "lucide-react";
 import Icon from "../assets/icon.svg";
 import { isMacOS } from "../lib/utils.ts";
+import { SETTINGS_TAB_ID } from "../constants.ts";
+import { useSurfaceColors } from "../hooks/surfaceColors.ts";
+import {useI18n} from "../hooks/i18n.tsx";
 
 export interface TabInfo {
     id: string;
@@ -19,40 +21,11 @@ interface TabBarProps {
     collapsed: boolean;
 }
 
-function adjustColor(hex: string, amount: number): string {
-    hex = hex.replace("#", "");
-    const r = Math.max(0, Math.min(255, parseInt(hex.substring(0, 2), 16) + amount));
-    const g = Math.max(0, Math.min(255, parseInt(hex.substring(2, 4), 16) + amount));
-    const b = Math.max(0, Math.min(255, parseInt(hex.substring(4, 6), 16) + amount));
-    return `rgb(${r}, ${g}, ${b})`;
-}
-
-function isColorDark(hex: string): boolean {
-    hex = hex.replace("#", "");
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
-    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return luminance < 0.5;
-}
-
 export default function TabBar(props: TabBarProps) {
     const { tabs, activeId, onSelect, onClose, onNew, backgroundColor, foregroundColor, collapsed } = props;
+    const t = useI18n();
 
-    const colors = useMemo(() => {
-        const dark = isColorDark(backgroundColor);
-        const borderColor = adjustColor(backgroundColor, dark ? 20 : -20);
-        const activeOverlay = dark
-            ? "rgba(255,255,255,0.1)"
-            : "rgba(0,0,0,0.08)";
-        const hoverOverlay = dark
-            ? "rgba(255,255,255,0.05)"
-            : "rgba(0,0,0,0.04)";
-        const inactiveText = dark
-            ? "rgba(255,255,255,0.5)"
-            : "rgba(0,0,0,0.45)";
-        return { dark, borderColor, activeOverlay, hoverOverlay, inactiveText };
-    }, [backgroundColor]);
+    const colors = useSurfaceColors(backgroundColor);
 
     const borderStyle = collapsed ? "none" : `1px solid ${colors.borderColor}`;
 
@@ -112,14 +85,19 @@ export default function TabBar(props: TabBarProps) {
                             }}
                             title={tab.name}
                         >
-                            <span
-                                className="text-sm truncate flex-1"
-                                style={{
-                                    color: isActive ? foregroundColor : colors.inactiveText,
-                                }}
-                            >
-                                {tab.name}
-                            </span>
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                                {tab.id === SETTINGS_TAB_ID && (
+                                    <Settings size={14} className="shrink-0" />
+                                )}
+                                <span
+                                    className="text-sm truncate"
+                                    style={{
+                                        color: isActive ? foregroundColor : colors.inactiveText,
+                                    }}
+                                >
+                                    {tab.name}
+                                </span>
+                            </div>
                             <button
                                 className="opacity-0 group-hover:opacity-100 rounded p-0.5 shrink-0 transition-all ml-1"
                                 style={{
@@ -160,7 +138,7 @@ export default function TabBar(props: TabBarProps) {
                     onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                 >
                     <Plus size={16} />
-                    <span className="text-sm">New Tab</span>
+                    <span className="text-sm">{t["New Tab"]}</span>
                 </button>
             </div>
         </div>

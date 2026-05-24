@@ -1,26 +1,10 @@
 import {LucideMaximize, LucideMinimize, LucideMinus, LucideX, PanelLeftClose, PanelLeftOpen} from "lucide-react";
 import {Button} from "@heroui/react";
 import {getCurrentWindow} from "@tauri-apps/api/window";
-import {useEffect, useMemo, useState} from "react";
+import {useEffect, useState} from "react";
 import {ITheme} from "@xterm/xterm";
 import {isMacOS} from "../lib/utils.ts";
-
-function adjustColor(hex: string, amount: number): string {
-    hex = hex.replace("#", "");
-    const r = Math.max(0, Math.min(255, parseInt(hex.substring(0, 2), 16) + amount));
-    const g = Math.max(0, Math.min(255, parseInt(hex.substring(2, 4), 16) + amount));
-    const b = Math.max(0, Math.min(255, parseInt(hex.substring(4, 6), 16) + amount));
-    return `rgb(${r}, ${g}, ${b})`;
-}
-
-function isColorDark(hex: string): boolean {
-    hex = hex.replace("#", "");
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
-    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return luminance < 0.5;
-}
+import {useSurfaceColors} from "../hooks/surfaceColors.ts";
 
 function WindowControl() {
     const [isMaximized, setIsMaximized] = useState(false);
@@ -97,10 +81,7 @@ export default function TitleBar({
     const bg = theme?.background ?? "black";
     const fg = theme?.foreground ?? "white";
 
-    const borderColor = useMemo(() => {
-        const dark = isColorDark(bg);
-        return adjustColor(bg, dark ? 20 : -20);
-    }, [bg]);
+    const { borderColor } = useSurfaceColors(bg);
 
     if (isMacOS()) {
         return (

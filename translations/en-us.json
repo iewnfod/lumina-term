@@ -35,5 +35,22 @@
     "Select": "Select",
     "Close": "Close",
     "New {name}": "New {name}",
-    "Create a new terminal with profile \"{name}\"": "Create a new terminal with profile \"{name}\""
+    "Create a new terminal with profile \"{name}\"": "Create a new terminal with profile \"{name}\"",
+    "Settings": "Settings",
+    "General": "General",
+    "Add Profile": "Add Profile",
+    "Delete Profile": "Delete Profile",
+    "Profiles": "Profiles",
+    "Delete": "Delete",
+    "Cancel": "Cancel",
+    "Save": "Save",
+    "Padding": "Padding",
+    "Theme Path": "Theme Path",
+    "Open Config File": "Open Config File",
+    "Are you sure you want to delete this profile?": "Are you sure you want to delete this profile?",
+    "This action cannot be undone.": "This action cannot be undone.",
+    "A profile with this name already exists": "A profile with this name already exists",
+    "New Tab": "New Tab",
+    "Font Family": "Font Family",
+    "Font Size": "Font Size"
 }

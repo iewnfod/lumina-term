@@ -45,7 +45,7 @@ export const DEFAULT_BINDINGS: Binding[] = [
     {
         key: ",",
         with: ["CtrlOrCommand"],
-        action: "openConfigFile",
+        action: "openSettings",
     },
     {
         key: "P",
@@ -59,5 +59,7 @@ export const DEFAULT_CONFIG: GlobalConfig = {
     profiles: [],
     showTabBar: false,
 };
+
+export const SETTINGS_TAB_ID = "__lum__settings__";
 
 export const MACOS_PADDING_OFFSET = 8;
