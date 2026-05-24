@@ -14,6 +14,7 @@ import {
     Trash2,
     FolderOpen,
     FileCog,
+    Bug,
 } from "lucide-react";
 import { ITheme } from "@xterm/xterm";
 import { useGlobalConfig } from "../hooks/config.tsx";
@@ -21,6 +22,7 @@ import { useI18n, languageNames } from "../hooks/i18n.tsx";
 import { TerminalProfile } from "../types/terminal.ts";
 import { openConfigFile, getConfigFilePath } from "../lib/utils.ts";
 import { parseProfileTheme } from "../lib/term.ts";
+import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { platform } from "@tauri-apps/plugin-os";
 import { useSurfaceColors } from "../hooks/surfaceColors.ts";
@@ -147,6 +149,26 @@ export default function SettingsPage({ theme }: { theme: ITheme | null }) {
                             <span className="truncate">{profile.name}</span>
                         </SidebarItem>
                     ))}
+                    <div className="mb-1" />
+
+                    {/* Developer header */}
+                    <div className="flex items-center gap-2 px-3 pt-3 pb-1.5 select-none">
+                        <span className="text-xs font-medium uppercase tracking-wider whitespace-nowrap" style={{ color: colors.inactiveText, opacity: 0.8 }}>
+                            {t["Developer"]}
+                        </span>
+                        <div className="flex-1" style={{ borderTop: `1px solid ${colors.borderColor}` }} />
+                    </div>
+
+                    <SidebarItem
+                        isSelected={selectedSection === "developer"}
+                        onClick={() => setSelectedSection("developer")}
+                        colors={colors}
+                    >
+                        <div className="flex items-center gap-2">
+                            <Bug size={15} />
+                            <span className="truncate">{t["Developer"]}</span>
+                        </div>
+                    </SidebarItem>
                 </div>
 
                 {/* Add Profile button */}
@@ -168,6 +190,8 @@ export default function SettingsPage({ theme }: { theme: ITheme | null }) {
             <div className="flex-1 p-6">
                 {selectedSection === "general" ? (
                     <GeneralSettings borderColor={colors.borderColor} />
+                ) : selectedSection === "developer" ? (
+                    <DeveloperSettings />
                 ) : (
                     <ProfileEditor
                         profile={config.profiles.find((p) => p.name === selectedSection)}
@@ -239,12 +263,6 @@ function GeneralSettings({ borderColor }: { borderColor: string }) {
         });
     }, [config.language, config.showTabBar, config.closeWindowOnLastTab]);
 
-    const [configPath, setConfigPath] = useState("");
-
-    useEffect(() => {
-        getConfigFilePath().then(setConfigPath).catch(() => setConfigPath(""));
-    }, []);
-
     const isDirty =
         draft.language !== config.language ||
         draft.showTabBar !== (config.showTabBar ?? false) ||
@@ -261,7 +279,7 @@ function GeneralSettings({ borderColor }: { borderColor: string }) {
     return (
         <div className="flex flex-col h-full">
             {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto pb-4 pl-1">
+            <div className="flex-1 overflow-y-auto pb-4 px-1">
                 <h2 className="text-lg font-semibold mb-6">{t["General"]}</h2>
 
                 <div className="flex flex-col gap-5">
@@ -325,25 +343,6 @@ function GeneralSettings({ borderColor }: { borderColor: string }) {
                     </Switch>
                 </div>
 
-                {/* Open Config File */}
-                <div className="flex flex-col gap-1.5">
-                    <div className="flex flex-row items-center justify-between max-w-sm">
-                        <Label>{t["Open Config File"]}</Label>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onPress={() => openConfigFile().catch(console.error)}
-                        >
-                            <FolderOpen size={15} />
-                            {t["Open Config File"]}
-                        </Button>
-                    </div>
-                    {configPath && (
-                        <p className="text-xs text-muted truncate" title={configPath}>
-                            {configPath}
-                        </p>
-                    )}
-                </div>
                 </div>
             </div>
             {/* Fixed bottom: Save */}
@@ -359,6 +358,67 @@ function GeneralSettings({ borderColor }: { borderColor: string }) {
                     {isDirty && (
                         <span className="text-xs text-muted">Unsaved changes</span>
                     )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function DeveloperSettings() {
+    const t = useI18n();
+    const [configPath, setConfigPath] = useState("");
+    const [isDebug, setIsDebug] = useState(false);
+
+    useEffect(() => {
+        getConfigFilePath().then(setConfigPath).catch(() => setConfigPath(""));
+        invoke<boolean>("is_debug").then(setIsDebug).catch(() => setIsDebug(false));
+    }, []);
+
+    return (
+        <div className="flex flex-col h-full">
+            <div className="flex-1 overflow-y-auto pb-4 px-1">
+                <h2 className="text-lg font-semibold mb-6">{t["Developer"]}</h2>
+
+                <div className="flex flex-col gap-5">
+                    {/* Config File Path */}
+                    <div className="flex flex-row justify-between items-center w-full">
+                        <div className="flex flex-col gap-1.5">
+                            <Label>{t["Config File Path"]}</Label>
+                            <p className="text-xs text-muted truncate flex-1" title={configPath}>
+                                {configPath || "—"}
+                            </p>
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0"
+                            onPress={() => openConfigFile().catch(console.error)}
+                        >
+                            <FolderOpen size={15} />
+                            {t["Open"]}
+                        </Button>
+                    </div>
+
+                    {/* DevTools */}
+                    <div className="flex flex-row justify-between items-center w-full">
+                        <div className="flex flex-col gap-1.5">
+                            <Label>{t["DevTools"]}</Label>
+                            <p className="text-xs text-muted">
+                                Open the webview developer tools
+                            </p>
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            isDisabled={!isDebug}
+                            onPress={() => invoke("open_devtools").catch(() => {
+                                console.log("DevTools command not available, use Ctrl+Shift+I");
+                            })}
+                        >
+                            <Bug size={15} />
+                            {t["Open"]}
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -477,7 +537,7 @@ function ProfileEditor({
     return (
         <div className="flex flex-col h-full">
             {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto pb-4 pl-1">
+            <div className="flex-1 overflow-y-auto pb-4 px-1">
                 {isEditingName ? (
                     <input
                         ref={nameInputRef}

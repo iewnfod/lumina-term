@@ -52,5 +52,9 @@
     "A profile with this name already exists": "A profile with this name already exists",
     "New Tab": "New Tab",
     "Font Family": "Font Family",
-    "Font Size": "Font Size"
+    "Font Size": "Font Size",
+    "Developer": "Developer",
+    "DevTools": "DevTools",
+    "Config File Path": "Config File Path",
+    "Open": "Open"
 }

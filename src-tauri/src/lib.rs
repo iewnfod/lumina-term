@@ -23,7 +23,10 @@ pub fn run() {
             write_to_terminal,
             resize_terminal,
             path_exist,
-            read_file
+            read_file,
+            is_debug,
+            #[cfg(debug_assertions)]
+            open_devtools,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

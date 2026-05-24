@@ -52,5 +52,9 @@
     "A profile with this name already exists": "已存在同名配置文件",
     "New Tab": "新建终端",
     "Font Family": "字体",
-    "Font Size": "字号"
+    "Font Size": "字号",
+    "Developer": "开发者",
+    "DevTools": "开发者工具",
+    "Config File Path": "配置文件保存路径",
+    "Open": "打开"
 }

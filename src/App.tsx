@@ -168,6 +168,7 @@ function App() {
 
                 if (allMatch) {
                     e.preventDefault();
+                    e.stopPropagation();
                     switch (binding.action) {
                         case "closeTab":
                             closeTerminal(SETTINGS_TAB_ID);
@@ -187,8 +188,8 @@ function App() {
             }
         };
 
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
+        window.addEventListener("keydown", handleKeyDown, { capture: true });
+        return () => window.removeEventListener("keydown", handleKeyDown, { capture: true });
     }, [currentId, parsedBindings, config.profiles]);
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -367,6 +368,7 @@ function App() {
                         theme={currentTheme}
                         tabBarVisible={tabBarVisible}
                         onToggleTabBar={() => updateConfig({ showTabBar: !tabBarVisible })}
+                        onOpenSettings={openSettings}
                     />
                     <div className="flex-1 relative overflow-hidden">
                         {currentId === SETTINGS_TAB_ID && (

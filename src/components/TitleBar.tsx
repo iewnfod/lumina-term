@@ -1,4 +1,4 @@
-import {LucideMaximize, LucideMinimize, LucideMinus, LucideX, PanelLeftClose, PanelLeftOpen} from "lucide-react";
+import {LucideMaximize, LucideMinimize, LucideMinus, LucideX, PanelLeftClose, PanelLeftOpen, Settings} from "lucide-react";
 import {Button} from "@heroui/react";
 import {getCurrentWindow} from "@tauri-apps/api/window";
 import {useEffect, useState} from "react";
@@ -73,10 +73,12 @@ export default function TitleBar({
     theme,
     tabBarVisible,
     onToggleTabBar,
+    onOpenSettings,
 } : {
     theme: ITheme | null,
     tabBarVisible: boolean,
     onToggleTabBar: () => void,
+    onOpenSettings: () => void,
 }) {
     const bg = theme?.background ?? "black";
     const fg = theme?.foreground ?? "white";
@@ -101,6 +103,14 @@ export default function TitleBar({
                 >
                     {tabBarVisible ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
                 </button>
+                <div className="flex-1" data-tauri-drag-region />
+                <button
+                    className="mr-2 p-1 rounded-md hover:bg-white/10 transition-colors cursor-pointer"
+                    style={{ color: fg }}
+                    onClick={onOpenSettings}
+                >
+                    <Settings size={18} />
+                </button>
             </div>
         );
     }
@@ -122,8 +132,18 @@ export default function TitleBar({
             >
                 {tabBarVisible ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
             </button>
-            <div style={{ color: fg }}>
-                <WindowControl/>
+            <div className="flex-1" data-tauri-drag-region />
+            <div className="flex flex-row items-center gap-1">
+                <button
+                    className="p-1 rounded-md hover:bg-white/10 transition-colors cursor-pointer"
+                    style={{ color: fg }}
+                    onClick={onOpenSettings}
+                >
+                    <Settings size={18} />
+                </button>
+                <div style={{ color: fg }}>
+                    <WindowControl/>
+                </div>
             </div>
         </div>
     );
