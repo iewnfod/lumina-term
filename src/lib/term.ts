@@ -34,27 +34,6 @@ export function parseProfilePadding(profile: TerminalProfile) {
     };
 }
 
-export async function loadThemeFile(themePath: string): Promise<ITheme | null> {
-    const basePath = await appDataDir();
-    const fullPath = await join(basePath, themePath);
-    const paths = [fullPath, themePath];
-    for (const path of paths) {
-        const exists = await invoke<boolean>("path_exist", { path });
-        if (exists) {
-            const content = await invoke<string>("read_file", { path });
-            if (content) {
-                try {
-                    return JSON.parse(content);
-                } catch (e) {
-                    console.error("Failed to parse theme", e);
-                    return null;
-                }
-            }
-        }
-    }
-    return null;
-}
-
 export async function parseProfileTheme(profile: TerminalProfile) {
     let theme: ITheme = DEFAULT_TERMINAL_THEME;
     if (profile.themePath) {

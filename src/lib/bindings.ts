@@ -2,6 +2,7 @@ import {Terminal} from "@xterm/xterm";
 import {Actions, Binding} from "../types/config.ts";
 import {DEFAULT_BINDINGS} from "../constants.ts";
 import {isMacOS} from "./utils.ts";
+import {debug} from "@tauri-apps/plugin-log";
 
 function actionSignature(b: Binding): string {
     const args = b.args
@@ -90,6 +91,8 @@ export function loadBindings(
         }
 
         if (event.type !== "keydown") return true;
+
+        debug(`XTerm Custom Key with key ${event.key} and type ${event.type}`);
 
         for (const binding of bindings) {
             if (binding.key === event.key) {

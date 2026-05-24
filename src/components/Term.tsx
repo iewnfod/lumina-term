@@ -27,7 +27,6 @@ export default function Term(props : TermProps) {
     const term = useRef<Terminal | null>(null);
     const termRef = useRef<HTMLDivElement>(null);
     const isInitialized = useRef<boolean>(false);
-    const bindingsLoaded = useRef<boolean>(false);
     const padding = useMemo(() => parseProfilePadding(profile), [profile]);
     const {config} = useGlobalConfig();
 
@@ -88,15 +87,6 @@ export default function Term(props : TermProps) {
     const handleActionsRef = useRef(handleActions);
     handleActionsRef.current = handleActions;
 
-    // Load keybindings once
-    useEffect(() => {
-        if (!term.current || bindingsLoaded.current) return;
-        bindingsLoaded.current = true;
-        loadBindings(term.current, parseBindings(config.bindings), (action, args) => {
-            handleActionsRef.current(action, args);
-        });
-    }, [config]);
-
     // Initialize terminal
     useEffect(() => {
         if (isInitialized.current) return;
@@ -125,6 +115,12 @@ export default function Term(props : TermProps) {
             fitAddon.fit();
             debug(`Terminal opened: id=${id}`);
         }
+
+        // Load keybindings right after terminal is ready
+        loadBindings(term.current, parseBindings(config.bindings), (action, args) => {
+            handleActionsRef.current(action, args);
+        });
+        info(`Bindings loaded for terminal with id ${id}`);
 
         term.current.onData((data) => {
             invoke("write_to_terminal", {id, content: data}).then();
