@@ -7,6 +7,7 @@ import {
     Label,
     Switch,
     Modal,
+    Tooltip,
 } from "@heroui/react";
 import {
     Plus,
@@ -19,6 +20,7 @@ import { useGlobalConfig } from "../hooks/config.tsx";
 import { useI18n, languageNames } from "../hooks/i18n.tsx";
 import { TerminalProfile } from "../types/terminal.ts";
 import { openConfigFile, getConfigFilePath } from "../lib/utils.ts";
+import { parseProfileTheme } from "../lib/term.ts";
 import { open } from "@tauri-apps/plugin-dialog";
 import { platform } from "@tauri-apps/plugin-os";
 import { useSurfaceColors } from "../hooks/surfaceColors.ts";
@@ -259,7 +261,7 @@ function GeneralSettings({ borderColor }: { borderColor: string }) {
     return (
         <div className="flex flex-col h-full">
             {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto pb-4">
+            <div className="flex-1 overflow-y-auto pb-4 pl-1">
                 <h2 className="text-lg font-semibold mb-6">{t["General"]}</h2>
 
                 <div className="flex flex-col gap-5">
@@ -407,6 +409,16 @@ function ProfileEditor({
         }
     }, [isEditingName]);
 
+    const [themePreview, setThemePreview] = useState<ITheme | null>(null);
+
+    useEffect(() => {
+        if (draft) {
+            parseProfileTheme(draft).then(setThemePreview);
+        } else {
+            setThemePreview(null);
+        }
+    }, [draft?.themePath, draft?.theme]);
+
     if (!profile || !draft) {
         return (
             <div className="flex items-center justify-center h-full text-muted text-sm">
@@ -465,7 +477,7 @@ function ProfileEditor({
     return (
         <div className="flex flex-col h-full">
             {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto pb-4">
+            <div className="flex-1 overflow-y-auto pb-4 pl-1">
                 {isEditingName ? (
                     <input
                         ref={nameInputRef}
@@ -591,15 +603,51 @@ function ProfileEditor({
                     {/* Theme Path */}
                     <div className="flex flex-col gap-1.5">
                         <Label htmlFor="profile-theme">{t["Theme Path"]}</Label>
-                        <Input
-                            id="profile-theme"
-                            value={draft.themePath ?? ""}
-                            onChange={(e) =>
-                                updateDraft({ themePath: e.target.value || undefined })
-                            }
-                            className="max-w-sm"
-                            placeholder="e.g. themes/my-theme.json"
-                        />
+                        <div className="flex flex-row items-center justify-between gap-4">
+                            <Input
+                                id="profile-theme"
+                                value={draft.themePath ?? ""}
+                                onChange={(e) =>
+                                    updateDraft({ themePath: e.target.value || undefined })
+                                }
+                                className="flex-1"
+                                placeholder="e.g. themes/my-theme.json"
+                            />
+                            {themePreview && (
+                                <div className="flex flex-col gap-1 shrink-0 pr-3">
+                                    <div className="flex flex-row gap-1">
+                                        {([["black", "Black"], ["red", "Red"], ["green", "Green"], ["yellow", "Yellow"]] as const).map(([key, label]) => (
+                                            <Tooltip key={key} delay={300} closeDelay={0}>
+                                                <Tooltip.Trigger>
+                                                    <div
+                                                        className="w-5 h-5 rounded-sm cursor-pointer"
+                                                        style={{ background: themePreview[key] ?? "#000" }}
+                                                    />
+                                                </Tooltip.Trigger>
+                                                <Tooltip.Content>
+                                                    <p className="text-xs">{label} {themePreview[key]}</p>
+                                                </Tooltip.Content>
+                                            </Tooltip>
+                                        ))}
+                                    </div>
+                                    <div className="flex flex-row gap-1">
+                                        {([["blue", "Blue"], ["magenta", "Magenta"], ["cyan", "Cyan"], ["white", "White"]] as const).map(([key, label]) => (
+                                            <Tooltip key={key} delay={300} closeDelay={0}>
+                                                <Tooltip.Trigger>
+                                                    <div
+                                                        className="w-5 h-5 rounded-sm cursor-pointer"
+                                                        style={{ background: themePreview[key] ?? "#000" }}
+                                                    />
+                                                </Tooltip.Trigger>
+                                                <Tooltip.Content>
+                                                    <p className="text-xs">{label} {themePreview[key]}</p>
+                                                </Tooltip.Content>
+                                            </Tooltip>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
