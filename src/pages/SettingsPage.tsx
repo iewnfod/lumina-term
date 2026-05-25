@@ -371,7 +371,7 @@ function GeneralSettings({ borderColor }: { borderColor: string }) {
                     {/* Show Tab Bar */}
                     <div className="flex flex-row items-center justify-between">
                         <Label className="cursor-pointer">
-                            {draft.showTabBar ? t["Hide Tab Bar"] : t["Show Tab Bar"]}
+                            {t["Show Tab Bar"]}
                         </Label>
                         <Switch
                             isSelected={draft.showTabBar}
@@ -386,9 +386,7 @@ function GeneralSettings({ borderColor }: { borderColor: string }) {
                     {/* Close Window on Last Tab */}
                     <div className="flex flex-row items-center justify-between">
                         <Label className="cursor-pointer">
-                            {draft.closeWindowOnLastTab
-                                ? t["Close Window on Last Tab Closed"]
-                                : t["Keep Window on Last Tab Closed"]}
+                            {t["Close Window on Last Tab Closed"]}
                         </Label>
                         <Switch
                             isSelected={draft.closeWindowOnLastTab}
