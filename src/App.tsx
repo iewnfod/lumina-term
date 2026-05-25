@@ -207,10 +207,14 @@ function App() {
             if (matchBinding(e, parsedBindings)) {
                 e.preventDefault();
             }
+            // Prevent Ctrl+Shift+C from opening DevTools "Inspect Element"
+            if (e.ctrlKey && e.shiftKey && !e.altKey && !e.metaKey && e.key.toLowerCase() === "c") {
+                e.preventDefault();
+            }
         };
 
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
+        window.addEventListener("keydown", handleKeyDown, { capture: true });
+        return () => window.removeEventListener("keydown", handleKeyDown, { capture: true });
     }, [parsedBindings]);
 
     // Build command palette actions

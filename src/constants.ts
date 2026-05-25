@@ -58,6 +58,7 @@ export const DEFAULT_CONFIG: GlobalConfig = {
     language: 'en-us',
     profiles: [],
     showTabBar: false,
+    copyWithCtrl: false,
 };
 
 export const SETTINGS_TAB_ID = "__lum__settings__";

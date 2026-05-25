@@ -17,4 +17,5 @@ export interface GlobalConfig {
     showTabBar?: boolean;
     bindings?: Binding[];
     closeWindowOnLastTab?: boolean;
+    copyWithCtrl?: boolean;
 }

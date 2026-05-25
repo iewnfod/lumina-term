@@ -65,5 +65,7 @@
     "Repository": "Repository",
     "License": "License",
     "Technology Stack": "Technology Stack",
-    "Default Profile": "Default Profile"
+    "Default Profile": "Default Profile",
+    "Copy with Ctrl+C": "Copy with Ctrl+C",
+    "Swap Ctrl+C and Ctrl+Shift+C for copy and interrupt on non-macOS systems": "Swap Ctrl+C (copy) and Ctrl+Shift+C (interrupt) behavior"
 }

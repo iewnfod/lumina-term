@@ -166,6 +166,8 @@ export default function Term(props : TermProps) {
         // Load keybindings right after terminal is ready
         loadBindings(term.current, parseBindings(config.bindings), (action, args) => {
             handleActionsRef.current(action, args);
+        }, config.copyWithCtrl ?? false, (data) => {
+            invoke("write_to_terminal", {id, content: data}).then();
         });
         info(`Bindings loaded for terminal with id ${id}`);
 

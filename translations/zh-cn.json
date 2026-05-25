@@ -65,5 +65,7 @@
     "Repository": "仓库",
     "License": "开源协议",
     "Technology Stack": "使用的技术",
-    "Default Profile": "默认配置文件"
+    "Default Profile": "默认配置文件",
+    "Copy with Ctrl+C": "使用 Ctrl+C 复制",
+    "Swap Ctrl+C and Ctrl+Shift+C for copy and interrupt on non-macOS systems": "交换 Ctrl+C（复制）与 Ctrl+Shift+C（中断）的行为"
 }

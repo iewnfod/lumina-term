@@ -78,6 +78,8 @@ export function loadBindings(
     term: Terminal,
     bindings: Binding[],
     onAction: (action: Actions, args?: Record<string, string>) => void,
+    copyWithCtrl: boolean = false,
+    onWrite?: (data: string) => void,
 ) {
     const held = new Set<string>();
 
@@ -94,6 +96,22 @@ export function loadBindings(
         if (event.type !== "keydown") return true;
 
         debug(`XTerm Custom Key with key ${event.key} and type ${event.type}`);
+
+        // Swap Ctrl+C / Ctrl+Shift+C behavior on non-macOS when copyWithCtrl is enabled
+        if (!isMacOS() && copyWithCtrl && !event.altKey && !event.metaKey && event.key.toLowerCase() === "c") {
+            if (!event.shiftKey) {
+                // Ctrl+C → copy selection
+                const selection = term.getSelection();
+                if (selection) {
+                    navigator.clipboard.writeText(selection).catch(() => {});
+                }
+                return false;
+            } else {
+                // Ctrl+Shift+C → send SIGINT
+                onWrite?.("\x03");
+                return false;
+            }
+        }
 
         for (const binding of bindings) {
             if (binding.key === event.key) {

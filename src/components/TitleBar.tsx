@@ -7,7 +7,7 @@ import {isMacOS} from "../lib/utils.ts";
 import {useSurfaceColors} from "../hooks/surfaceColors.ts";
 import { info } from "@tauri-apps/plugin-log";
 
-function WindowControl() {
+function WindowControl({size} : {size: number}) {
     const [isMaximized, setIsMaximized] = useState(false);
 
     const handleMinimize = () => {
@@ -52,23 +52,23 @@ function WindowControl() {
     }, []);
 
     return (
-        <div className="flex flex-row justify-end items-center">
-            <Button isIconOnly variant="ghost" onClick={handleMinimize} size="sm" className="rounded-lg">
-                <LucideMinus size={20}/>
+        <div className="flex flex-row justify-end items-center" style={{height: size}}>
+            <Button isIconOnly variant="ghost" onClick={handleMinimize} size="sm" className="rounded-lg h-full grow" style={{width: size}}>
+                <LucideMinus/>
             </Button>
             {
                 isMaximized ? (
-                    <Button isIconOnly variant="ghost" onClick={handleUnmaximize} size="sm" className="rounded-lg">
-                        <LucideMinimize size={20}/>
+                    <Button isIconOnly variant="ghost" onClick={handleUnmaximize} size="sm" className="rounded-lg h-full grow" style={{width: size}}>
+                        <LucideMinimize/>
                     </Button>
                 ) : (
-                    <Button isIconOnly variant="ghost" onClick={handleMaximize} size="sm" className="rounded-lg">
-                        <LucideMaximize size={20}/>
+                    <Button isIconOnly variant="ghost" onClick={handleMaximize} size="sm" className="rounded-lg h-full grow" style={{width: size}}>
+                        <LucideMaximize/>
                     </Button>
                 )
             }
-            <Button isIconOnly variant="ghost" onClick={handleClose} size="sm" className="rounded-lg">
-                <LucideX size={20} className="text-red-500"/>
+            <Button isIconOnly variant="ghost" onClick={handleClose} size="sm" className="rounded-lg h-full" style={{width: size}}>
+                <LucideX className="text-red-500"/>
             </Button>
         </div>
     );
@@ -90,6 +90,7 @@ export default function TitleBar({
 
     const { borderColor } = useSurfaceColors(bg);
     const macOSTitleButtonMarginLeft = tabBarVisible ? 8 : 88;
+    const size = 36;
 
     if (isMacOS()) {
         return (
@@ -97,7 +98,7 @@ export default function TitleBar({
                 data-tauri-drag-region
                 className="w-full flex flex-row items-center select-none shrink-0"
                 style={{
-                    height: 36,
+                    height: size,
                     background: bg,
                     borderBottom: `1px solid ${borderColor}`,
                 }}
@@ -126,29 +127,35 @@ export default function TitleBar({
             data-tauri-drag-region
             className="w-full flex flex-row items-center justify-between select-none shrink-0"
             style={{
-                height: 36,
+                height: size,
                 background: bg,
                 borderBottom: `1px solid ${borderColor}`,
             }}
         >
-            <button
-                className="ml-2 p-1 rounded-md hover:bg-white/10 transition-colors cursor-pointer"
-                style={{ color: fg }}
+            <Button
+                isIconOnly
+                variant="ghost"
                 onClick={() => { info(`Tab bar ${tabBarVisible ? "hidden" : "shown"}`); onToggleTabBar(); }}
+                size="sm"
+                className="rounded-lg h-full"
+                style={{ color: fg, width: size }}
             >
-                {tabBarVisible ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
-            </button>
+                {tabBarVisible ? <PanelLeftClose/> : <PanelLeftOpen/>}
+            </Button>
             <div className="flex-1" data-tauri-drag-region />
-            <div className="flex flex-row items-center gap-1">
-                <button
-                    className="p-1 rounded-md hover:bg-white/10 transition-colors cursor-pointer"
-                    style={{ color: fg }}
+            <div className="flex flex-row items-center gap-1 h-full">
+                <Button
+                    isIconOnly
+                    variant="ghost"
                     onClick={() => { info("Settings opened from title bar"); onOpenSettings(); }}
+                    size="sm"
+                    className="rounded-lg h-full grow"
+                    style={{width: size}}
                 >
-                    <Settings size={18} />
-                </button>
+                    <Settings/>
+                </Button>
                 <div style={{ color: fg }}>
-                    <WindowControl/>
+                    <WindowControl size={size}/>
                 </div>
             </div>
         </div>
