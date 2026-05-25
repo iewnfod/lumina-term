@@ -32,6 +32,26 @@
   <img src="./assets/profile-zh.png" alt="配置文件" width="800">
 </p>
 
+## 性能
+
+Lumina Terminal 的渲染性能已接近 [Alacritty](https://alacritty.org/)，在处理大文本文件时也能保持流畅输出。
+
+**测试方案：**
+```shell
+# 生成测试文件
+base64 /dev/urandom | head -c 50000000 > bigfile.txt
+# 测量输出耗时
+time cat bigfile.txt
+```
+
+**测试环境：** Windows 11 + WSL2 (Debian)，通过 PowerShell 7 运行
+
+<p align="center">
+  <img src="./assets/print-50mb-text-file.png" alt="性能对比：Lumina Terminal vs Alacritty" width="800">
+</p>
+
+Lumina Terminal 耗时 **0m4.008s**，Alacritty 耗时 **0m3.223s** — 性能已完全达到日常高频使用的标准。
+
 ## 开发
 1. 克隆此仓库并进入目录
 ```shell

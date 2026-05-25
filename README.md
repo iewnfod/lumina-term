@@ -32,6 +32,26 @@ A modern, cross-platform terminal emulator built with Tauri, React, and Xterm.js
   <img src="./assets/profile-en.png" alt="Profile" width="800">
 </p>
 
+## Performance
+
+Lumina Terminal's rendering performance is close to [Alacritty](https://alacritty.org/), delivering smooth output even with large text files.
+
+**Benchmark setup:**
+```shell
+# Generate test file
+base64 /dev/urandom | head -c 50000000 > bigfile.txt
+# Measure output time
+time cat bigfile.txt
+```
+
+**Environment:** Windows 11 + WSL2 (Debian) via PowerShell 7
+
+<p align="center">
+  <img src="./assets/print-50mb-text-file.png" alt="Performance: Lumina Terminal vs Alacritty" width="800">
+</p>
+
+Lumina Terminal completed in **0m4.008s** vs Alacritty's **0m3.223s** — well within the range for high-performance daily use.
+
 ## Development
 1. Clone the repo and enter it.
 ```shell
