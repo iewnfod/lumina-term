@@ -123,6 +123,12 @@ function App() {
         setCurrentId(id);
     };
 
+    const toTab = useCallback((index: number) => {
+        if (ids.length === 0) return;
+        const idx = index < 0 ? ids.length - 1 : Math.min(index, ids.length - 1);
+        setCurrentId(ids[idx]);
+    }, [ids]);
+
     const openSettings = useCallback(() => {
         info("Opening settings");
         if (ids.includes(SETTINGS_TAB_ID)) {
@@ -197,8 +203,14 @@ function App() {
             case "openCommandPalette":
                 setIsCommandPaletteOpen(true);
                 break;
+            case "toTab":
+                if (args?.index !== undefined) {
+                    const idx = args.index === "last" ? -1 : parseInt(args.index, 10);
+                    if (!isNaN(idx)) toTab(idx);
+                }
+                break;
         }
-    }, [currentId, config.profiles, openSettings]);
+    }, [currentId, config.profiles, openSettings, toTab]);
     useKeyboardBindings(parsedBindings, handleNonTerminalAction, isNonTerminalTab);
 
     // Global: prevent browser defaults for configured shortcuts
@@ -417,6 +429,7 @@ function App() {
                                     }}
                                     onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
                                     onOpenSettings={openSettings}
+                                    onToTab={toTab}
                                 />
                             </div>
                         ))}

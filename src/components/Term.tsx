@@ -24,6 +24,7 @@ interface TermProps {
     onNewTab?: (profileName?: string) => void;
     onOpenCommandPalette?: () => void;
     onOpenSettings?: () => void;
+    onToTab?: (index: number) => void;
 }
 
 export default function Term(props : TermProps) {
@@ -87,6 +88,12 @@ export default function Term(props : TermProps) {
                 break;
             case "openSettings":
                 props.onOpenSettings?.();
+                break;
+            case "toTab":
+                if (args?.index !== undefined) {
+                    const idx = args.index === "last" ? -1 : parseInt(args.index, 10);
+                    if (!isNaN(idx)) props.onToTab?.(idx);
+                }
                 break;
         }
     };

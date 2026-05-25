@@ -52,6 +52,60 @@ export const DEFAULT_BINDINGS: Binding[] = [
         with: ["CtrlOrCommand", "shift"],
         action: "openCommandPalette",
     },
+    {
+        key: "1",
+        with: ["CtrlOrCommand"],
+        action: "toTab",
+        args: { index: "0" },
+    },
+    {
+        key: "2",
+        with: ["CtrlOrCommand"],
+        action: "toTab",
+        args: { index: "1" },
+    },
+    {
+        key: "3",
+        with: ["CtrlOrCommand"],
+        action: "toTab",
+        args: { index: "2" },
+    },
+    {
+        key: "4",
+        with: ["CtrlOrCommand"],
+        action: "toTab",
+        args: { index: "3" },
+    },
+    {
+        key: "5",
+        with: ["CtrlOrCommand"],
+        action: "toTab",
+        args: { index: "4" },
+    },
+    {
+        key: "6",
+        with: ["CtrlOrCommand"],
+        action: "toTab",
+        args: { index: "5" },
+    },
+    {
+        key: "7",
+        with: ["CtrlOrCommand"],
+        action: "toTab",
+        args: { index: "6" },
+    },
+    {
+        key: "8",
+        with: ["CtrlOrCommand"],
+        action: "toTab",
+        args: { index: "7" },
+    },
+    {
+        key: "9",
+        with: ["CtrlOrCommand"],
+        action: "toTab",
+        args: { index: "last" },
+    },
 ];
 
 export const DEFAULT_CONFIG: GlobalConfig = {
