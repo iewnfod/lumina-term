@@ -76,7 +76,7 @@ pnpm tauri dev
 * [Vite](https://cn.vite.dev/)
 * [HeroUI](https://heroui.com/)
 * [portable-pty](https://docs.rs/portable-pty/latest/portable_pty/)
-* [Xterm.js](https://xtermjs.org/)
+* [Xterm.js & Addons](https://xtermjs.org/)
 * [Tailwind CSS](https://tailwindcss.com/)
 * [Lucide Icons](https://lucide.dev/)
 * [log](https://docs.rs/log/latest/log/)
