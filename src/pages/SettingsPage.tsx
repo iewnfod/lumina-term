@@ -432,7 +432,7 @@ function GeneralSettings({ borderColor }: { borderColor: string }) {
                         {t["Save"]}
                     </Button>
                     {isDirty && (
-                        <span className="text-xs text-muted">Unsaved changes</span>
+                        <span className="text-xs text-muted">{t["Unsaved changes"]}</span>
                     )}
                 </div>
             </div>
@@ -794,6 +794,26 @@ function ProfileEditor({
                         </div>
                     </div>
 
+                    {/* WebGL Renderer */}
+                    <div className="flex flex-row items-center justify-between">
+                        <div className="flex flex-col gap-0.5">
+                            <Label className="cursor-pointer">
+                                {t["WebGL Renderer"]}
+                            </Label>
+                            <p className="text-xs text-muted">
+                                Use WebGL to accelerate terminal rendering for better performance
+                            </p>
+                        </div>
+                        <Switch
+                            isSelected={draft.webgl ?? false}
+                            onChange={(v) => updateDraft({ webgl: v })}
+                        >
+                            <Switch.Control>
+                                <Switch.Thumb />
+                            </Switch.Control>
+                        </Switch>
+                    </div>
+
                     {/* Font Size */}
                     <div className="flex flex-col gap-1.5">
                         <Label htmlFor="profile-font-size">{t["Font Size"]}</Label>
@@ -873,7 +893,7 @@ function ProfileEditor({
                             {t["Save"]}
                         </Button>
                         {isDirty && (
-                            <span className="text-xs text-muted">Unsaved changes</span>
+                            <span className="text-xs text-muted">{t["Unsaved changes"]}</span>
                         )}
                     </div>
                     <Button

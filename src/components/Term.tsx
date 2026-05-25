@@ -4,6 +4,7 @@ import {listen} from "@tauri-apps/api/event";
 import {invoke} from "@tauri-apps/api/core";
 import {TerminalProfile} from "../types/terminal.ts";
 import {FitAddon} from "@xterm/addon-fit";
+import {WebglAddon} from "@xterm/addon-webgl";
 import {getCurrentWindow, LogicalSize} from "@tauri-apps/api/window";
 import {parseProfilePadding, parseProfileTheme} from "../lib/term.ts";
 import {loadBindings, parseBindings} from "../lib/bindings.ts";
@@ -157,6 +158,16 @@ export default function Term(props : TermProps) {
         const fitAddon = new FitAddon();
         term.current.loadAddon(fitAddon);
 
+        if (profile.webgl) {
+            try {
+                const webglAddon = new WebglAddon();
+                term.current.loadAddon(webglAddon);
+                debug(`WebGL addon loaded for terminal id=${id}`);
+            } catch (e) {
+                info(`WebGL addon failed to load, falling back to canvas: ${e}`);
+            }
+        }
+
         if (termRef.current) {
             term.current.open(termRef.current);
             fitAddon.fit();
@@ -177,9 +188,54 @@ export default function Term(props : TermProps) {
         term.current.onResize(({cols, rows}) => {
             invoke("resize_terminal", {id, cols, rows}).then();
         });
+
+        // Chunked write: batch incoming PTY data and yield between chunks
+        // to avoid blocking the main thread during large output (e.g. cat bigfile)
+        const pendingWrites: string[] = [];
+        let writeScheduled = false;
+        const CHUNK_SIZE = 1024 * 8;
+
+        function drainWrites(term: Terminal) {
+            if (pendingWrites.length === 0) {
+                writeScheduled = false;
+                return;
+            }
+
+            // Build one chunk by consuming items from the front of the queue
+            let chunk = '';
+            let taken = 0;
+            while (pendingWrites.length > 0 && taken < CHUNK_SIZE) {
+                const next = pendingWrites[0];
+                const remaining = CHUNK_SIZE - taken;
+                if (next.length <= remaining) {
+                    chunk += pendingWrites.shift()!;
+                    taken += next.length;
+                } else {
+                    chunk += next.slice(0, remaining);
+                    pendingWrites[0] = next.slice(remaining);
+                    taken = CHUNK_SIZE;
+                }
+            }
+
+            if (pendingWrites.length > 0) {
+                writeScheduled = true;
+                term.write(chunk, () => {
+                    queueMicrotask(() => drainWrites(term));
+                });
+            } else {
+                term.write(chunk);
+                writeScheduled = false;
+            }
+        }
+
         listen<string>(`term-write-${id}`, (event) => {
             if (term.current && event.payload) {
-                term.current.write(event.payload);
+                const data = event.payload;
+                pendingWrites.push(data);
+                if (!writeScheduled) {
+                    writeScheduled = true;
+                    queueMicrotask(() => drainWrites(term.current!));
+                }
             }
         }).then(() => {
             invoke("start_terminal", {

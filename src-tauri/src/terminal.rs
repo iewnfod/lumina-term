@@ -71,7 +71,7 @@ pub fn start_terminal(
     let id_reader = id.clone();
     thread::spawn(move || {
         log::debug!("Reader thread started for {}", id_reader);
-        let mut buffer = [0u8; 1024];
+        let mut buffer = [0u8; 1024*8];
         loop {
             match reader.read(&mut buffer) {
                 Ok(0) => {
