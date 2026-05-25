@@ -32,6 +32,48 @@ A modern, cross-platform terminal emulator built with Tauri, React, and Xterm.js
   <img src="./assets/profile-en.png" alt="Profile" width="800">
 </p>
 
+## Features
+
+### Terminal
+* Multi-tab terminal backed by [portable-pty](https://docs.rs/portable-pty/latest/portable_pty/) — each tab runs a real shell process
+* Configurable shell per profile — use PowerShell, WSL, Git Bash, or any executable
+* [WebGL renderer](https://github.com/xtermjs/xterm.js/tree/master/addons/addon-webgl) for GPU-accelerated rendering (optional per-profile)
+* Chunked output batching — smoothly handles large text dumps without blocking the UI
+* Drag and drop files into the terminal to insert their paths
+* Auto-resize terminal dimensions when the window or container changes
+
+### User Interface
+* **Command Palette** (`Ctrl+Shift+P` / `Cmd+Shift+P`) — search and execute commands with keyboard navigation
+* **Tab Bar** — sidebar with tab list, drag region, and hover-close buttons, toggleable via title bar or command palette
+* **Custom Title Bar** — window controls (minimize/maximize/close) integrated with the terminal theme on Windows & Linux
+* **Auto Theme** — UI light/dark mode automatically syncs to the terminal background color
+
+### Keyboard Shortcuts
+* Fully customizable keybindings stored in the config file
+* Default bindings:
+  * `Ctrl/Cmd+T` — New tab
+  * `Ctrl/Cmd+W` — Close current tab
+  * `Ctrl/Cmd+,` — Open settings
+  * `Ctrl/Cmd+Shift+P` — Command palette
+  * `Ctrl/Cmd+1–9` — Switch to tab by index
+* `Ctrl+C` / `Ctrl+Shift+C` swap (non-macOS) — copy selection with `Ctrl+C`, send SIGINT with `Ctrl+Shift+C`
+
+### Profiles
+* Multiple named profiles with per-profile shell, dimensions, fonts, and theme
+* Terminal settings per profile:
+  * Shell executable path (with file browser)
+  * Rows & columns
+  * Padding
+  * Font family, weight, size, and italic style
+  * WebGL renderer toggle
+* Custom terminal themes via JSON files (xterm.js ITheme format) with live color preview
+
+### i18n
+* English & Simplified Chinese (简体中文)
+
+### Welcome Wizard
+* First-run onboarding with language selection, profile creation, and a confetti finish
+
 ## Performance
 
 Lumina Terminal's rendering performance is close to [Alacritty](https://alacritty.org/), delivering smooth output even with large text files.
