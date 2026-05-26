@@ -76,5 +76,6 @@
     "Font Style": "Font Style",
     "Normal": "Normal",
     "Render Settings": "Render Settings",
-    "webgl description": "Use WebGL to accelerate terminal rendering for better performance"
+    "webgl description": "Use WebGL to accelerate terminal rendering for better performance",
+    "Custom": "Custom"
 }

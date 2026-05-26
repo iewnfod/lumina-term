@@ -40,6 +40,7 @@ pub fn run() {
             kill_terminal,
             write_to_terminal,
             resize_terminal,
+            find_shells,
             path_exist,
             read_file,
             is_debug,

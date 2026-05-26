@@ -1,8 +1,9 @@
 import {Button, Card, Input, Label, ListBox, Select, Separator} from "@heroui/react";
 import {languageNames, useI18n} from "../hooks/i18n.tsx";
+import {useShells} from "../hooks/useShells.ts";
 import Icon from "../assets/icon.svg"
 import {useGlobalConfig} from "../hooks/config.tsx";
-import {useCallback, useEffect, useRef, useState} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {getCurrentWindow, LogicalSize} from "@tauri-apps/api/window";
 import {TerminalProfile} from "../types/terminal.ts";
 import {open} from "@tauri-apps/plugin-dialog";
@@ -10,6 +11,8 @@ import {invoke} from "@tauri-apps/api/core";
 import Confetti from "react-confetti-boom";
 import {platform} from "@tauri-apps/plugin-os";
 import { info, debug } from "@tauri-apps/plugin-log";
+
+const CUSTOM_EXE = "__custom__";
 
 function Step1({onNext} : {
     onNext: () => void;
@@ -96,6 +99,15 @@ function Step2({onNext, onPrev} : {
         cols: 80,
     });
     const [exePathExist, setExePathExist] = useState<boolean>(false);
+    const shells = useShells();
+    const [isCustomExe, setIsCustomExe] = useState(false);
+
+    const selectedShellKey = useMemo(() => {
+        if (isCustomExe) return CUSTOM_EXE;
+        if (!profile.exePath) return "";
+        if (shells.includes(profile.exePath)) return profile.exePath;
+        return CUSTOM_EXE;
+    }, [profile.exePath, shells, isCustomExe]);
 
     const onExePathChange = (value: string) => {
         setProfile(prevState => {
@@ -205,23 +217,59 @@ function Step2({onNext, onPrev} : {
                     </div>
                     <div className="flex flex-col gap-1 w-full">
                         <Label htmlFor="input-exe-path" isRequired>{t["Exe Path"]}</Label>
-                        <div className="flex flex-row gap-2">
-                            <Input
-                                required
-                                id="input-exe-path"
-                                className="w-full rounded-xl"
-                                variant="secondary"
-                                value={profile.exePath}
-                                onChange={(e) => onExePathChange(e.target.value)}
-                            />
-                            <Button
-                                className="rounded-xl"
-                                variant="secondary"
-                                onClick={selectExePath}
-                            >
-                                {t["Select"]}
-                            </Button>
-                        </div>
+                        <Select
+                            selectedKey={selectedShellKey}
+                            onSelectionChange={(key) => {
+                                const k = key as string;
+                                if (k === CUSTOM_EXE) {
+                                    setIsCustomExe(true);
+                                    onExePathChange("");
+                                } else if (k) {
+                                    setIsCustomExe(false);
+                                    onExePathChange(k);
+                                }
+                            }}
+                        >
+                            <Select.Trigger>
+                                <Select.Value />
+                                <Select.Indicator />
+                            </Select.Trigger>
+                            <Select.Popover>
+                                <ListBox>
+                                    {shells.map((path) => {
+                                        const name = path.replace(/\\/g, "/").split("/").pop() || path;
+                                        return (
+                                            <ListBox.Item id={path} key={path} textValue={name}>
+                                                {name}
+                                                <span className="text-xs text-muted ml-2">{path}</span>
+                                            </ListBox.Item>
+                                        );
+                                    })}
+                                    <ListBox.Item id={CUSTOM_EXE} key={CUSTOM_EXE} textValue="Custom">
+                                        {t["Custom"]}
+                                    </ListBox.Item>
+                                </ListBox>
+                            </Select.Popover>
+                        </Select>
+                        {isCustomExe && (
+                            <div className="flex flex-row gap-2 mt-1">
+                                <Input
+                                    required
+                                    id="input-exe-path"
+                                    className="w-full rounded-xl"
+                                    variant="secondary"
+                                    value={profile.exePath}
+                                    onChange={(e) => onExePathChange(e.target.value)}
+                                />
+                                <Button
+                                    className="rounded-xl"
+                                    variant="secondary"
+                                    onClick={selectExePath}
+                                >
+                                    {t["Select"]}
+                                </Button>
+                            </div>
+                        )}
                         <span className="px-1 text-sm text-danger whitespace-pre-wrap">
                             {exePathExist ? " " : t["File not exist"]}
                         </span>

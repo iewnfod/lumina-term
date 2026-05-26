@@ -76,5 +76,6 @@
     "Font Style": "字体样式",
     "Normal": "正常",
     "Render Settings": "渲染设置",
-    "webgl description": "使用 WebGL 加速终端渲染以获取更高性能"
+    "webgl description": "使用 WebGL 加速终端渲染以获取更高性能",
+    "Custom": "自定义"
 }

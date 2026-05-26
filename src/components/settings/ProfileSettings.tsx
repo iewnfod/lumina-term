@@ -1,13 +1,16 @@
 import {TerminalProfile} from "../../types/terminal.ts";
 import {useGlobalConfig} from "../../hooks/config.tsx";
 import {useI18n} from "../../hooks/i18n.tsx";
+import {useShells} from "../../hooks/useShells.ts";
 import {useEffect, useMemo, useRef, useState} from "react";
 import {info} from "@tauri-apps/plugin-log";
 import {platform} from "@tauri-apps/plugin-os";
 import {open} from "@tauri-apps/plugin-dialog";
-import {Button, Input, Label} from "@heroui/react";
+import {Button, Input, Label, ListBox, Select} from "@heroui/react";
 import RenderSettings from "./RenderSettings.tsx";
 import {Trash2} from "lucide-react";
+
+const CUSTOM_EXE = "__custom__";
 
 export default function ProfileSettings({
     profile,
@@ -24,13 +27,17 @@ export default function ProfileSettings({
     const t = useI18n();
 
     const [draft, setDraft] = useState<TerminalProfile | null>(null);
+    const shells = useShells();
+    const [isCustomExe, setIsCustomExe] = useState(false);
 
     // Reset draft when profile identity changes
     useEffect(() => {
         if (profile) {
             setDraft({ ...profile });
+            setIsCustomExe(!!profile.exePath && !shells.includes(profile.exePath));
         } else {
             setDraft(null);
+            setIsCustomExe(false);
         }
     }, [profile?.name]);
 
@@ -52,6 +59,13 @@ export default function ProfileSettings({
             nameInputRef.current.select();
         }
     }, [isEditingName]);
+
+    const selectedShellKey = useMemo(() => {
+        if (isCustomExe) return CUSTOM_EXE;
+        if (!draft?.exePath) return "";
+        if (shells.includes(draft.exePath)) return draft.exePath;
+        return CUSTOM_EXE;
+    }, [draft?.exePath, shells, isCustomExe]);
 
     if (!profile || !draft) {
         return (
@@ -87,6 +101,16 @@ export default function ProfileSettings({
         updateConfig({ profiles: newProfiles });
         if (newName !== oldName) {
             onNameChange(newName);
+        }
+    };
+
+    const handleShellSelectionChange = (key: string) => {
+        if (key === CUSTOM_EXE) {
+            setIsCustomExe(true);
+            updateDraft({ exePath: "" });
+        } else if (key) {
+            setIsCustomExe(false);
+            updateDraft({ exePath: key });
         }
     };
 
@@ -141,21 +165,49 @@ export default function ProfileSettings({
                     {/* Exe Path */}
                     <div className="flex flex-col gap-1.5">
                         <Label htmlFor="profile-exe-path" isRequired>{t["Exe Path"]}</Label>
-                        <div className="flex flex-row gap-2 items-center">
-                            <Input
-                                id="profile-exe-path"
-                                value={draft.exePath}
-                                onChange={(e) => updateDraft({ exePath: e.target.value })}
-                                className="flex-1 max-w-sm"
-                            />
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onPress={handleExePathBrowse}
-                            >
-                                {t["Select"]}
-                            </Button>
-                        </div>
+                        <Select
+                            selectedKey={selectedShellKey}
+                            onSelectionChange={(key) => handleShellSelectionChange(key as string)}
+                            className="max-w-sm"
+                        >
+                            <Select.Trigger>
+                                <Select.Value />
+                                <Select.Indicator />
+                            </Select.Trigger>
+                            <Select.Popover>
+                                <ListBox>
+                                    {shells.map((path) => {
+                                        const name = path.replace(/\\/g, "/").split("/").pop() || path;
+                                        return (
+                                            <ListBox.Item id={path} key={path} textValue={name}>
+                                                {name}
+                                                <span className="text-xs text-muted ml-2">{path}</span>
+                                            </ListBox.Item>
+                                        );
+                                    })}
+                                    <ListBox.Item id={CUSTOM_EXE} key={CUSTOM_EXE} textValue="Custom">
+                                        {t["Custom"]}
+                                    </ListBox.Item>
+                                </ListBox>
+                            </Select.Popover>
+                        </Select>
+                        {isCustomExe && (
+                            <div className="flex flex-row gap-2 items-center mt-1">
+                                <Input
+                                    id="profile-exe-path"
+                                    value={draft.exePath}
+                                    onChange={(e) => updateDraft({ exePath: e.target.value })}
+                                    className="flex-1 max-w-sm"
+                                />
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onPress={handleExePathBrowse}
+                                >
+                                    {t["Select"]}
+                                </Button>
+                            </div>
+                        )}
                     </div>
 
                     <RenderSettings draft={draft} updateDraft={updateDraft} idPrefix="profile" defaultExpanded={false} />
