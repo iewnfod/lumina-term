@@ -44,6 +44,7 @@ pub fn run() {
             read_file,
             is_debug,
             get_log_dir,
+            get_commit_hash,
             #[cfg(debug_assertions)]
             open_devtools,
         ])

@@ -28,3 +28,8 @@ pub fn open_devtools(window: tauri::WebviewWindow) {
 pub fn is_debug() -> bool {
     cfg!(debug_assertions)
 }
+
+#[tauri::command]
+pub fn get_commit_hash() -> String {
+    env!("GIT_HASH").to_string()
+}

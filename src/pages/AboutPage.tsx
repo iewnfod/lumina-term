@@ -1,9 +1,11 @@
-import { useMemo } from "react";
+import {useEffect, useMemo, useState} from "react";
 import { ITheme } from "@xterm/xterm";
 import { useI18n } from "../hooks/i18n.tsx";
 import { useSurfaceColors } from "../hooks/surfaceColors.ts";
 import iconSvg from "../assets/icon.svg";
 import readmeRaw from "../../README.md?raw";
+import {invoke} from "@tauri-apps/api/core";
+import {getVersion} from "@tauri-apps/api/app";
 
 interface TechItem {
     name: string;
@@ -33,13 +35,24 @@ export default function AboutPage({ theme }: { theme: ITheme | null }) {
     const colors = useSurfaceColors(bg);
 
     const technologies = useMemo(() => parseTechStack(readmeRaw), []);
+    const [commitHash, setCommitHash] = useState<string>("");
+    const [version, setVersion] = useState<string>("");
+
+    useEffect(() => {
+        invoke<string>("get_commit_hash").then((hash) => {
+            setCommitHash(hash);
+        });
+        getVersion().then((version) => {
+            setVersion(version);
+        });
+    }, []);
 
     return (
         <div
-            className="flex flex-col items-center justify-center h-full overflow-y-auto px-6 py-8"
+            className="flex flex-col items-center justify-center h-full px-6 py-8"
             style={{ background: bg, color: fg }}
         >
-            <div className="flex flex-col items-center gap-6 max-w-sm w-full">
+            <div className="flex flex-col items-center gap-6 max-w-sm w-full overflow-y-auto">
                 <img
                     src={iconSvg}
                     alt="Lumina Terminal"
@@ -49,6 +62,17 @@ export default function AboutPage({ theme }: { theme: ITheme | null }) {
                 <h1 className="text-xl font-semibold select-none">Lumina Terminal</h1>
 
                 <div className="flex flex-col gap-3 w-full text-sm">
+                    {/* Version */}
+                    <div
+                        className="flex items-center justify-between py-2"
+                        style={{ borderBottom: `1px solid ${colors.borderColor}` }}
+                    >
+                        <span className="text-muted">{t["Version"]}</span>
+                        <span style={{ color: fg }}>
+                            {version} ({commitHash})
+                        </span>
+                    </div>
+
                     {/* Author */}
                     <div
                         className="flex items-center justify-between py-2"
