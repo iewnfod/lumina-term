@@ -58,7 +58,7 @@ function SidebarItem({
     );
 }
 
-export default function SettingsPage({ theme }: { theme: ITheme | null }) {
+export default function SettingsPage({ theme, openAbout }: { theme: ITheme | null, openAbout: () => void }) {
     const { config, updateConfig, newProfile } = useGlobalConfig();
     const t = useI18n();
     const [selectedSection, setSelectedSection] = useState<SettingsSection>("general");
@@ -201,7 +201,7 @@ export default function SettingsPage({ theme }: { theme: ITheme | null }) {
             {/* Content Area */}
             <div className="flex-1 p-6">
                 {selectedSection === "general" ? (
-                    <GeneralSettings borderColor={colors.borderColor} />
+                    <GeneralSettings borderColor={colors.borderColor} openAbout={openAbout} />
                 ) : selectedSection === "globalProfile" ? (
                     <GlobalProfileSettings borderColor={colors.borderColor} />
                 ) : selectedSection === "developer" ? (

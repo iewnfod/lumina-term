@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {ReactNode, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {
     Modal,
     Kbd,
@@ -16,7 +16,7 @@ export interface CommandAction {
     id: string;
     label: string;
     description?: string;
-    icon: React.ReactNode;
+    icon: ReactNode;
     shortcut?: { abbr?: string; content: string }[];
     category?: string;
     keywords?: string[];
@@ -180,6 +180,8 @@ export default function CommandPalette({ isOpen, onOpenChange, actions }: Comman
                                         <Kbd>
                                             <Kbd.Abbr keyValue={modAbbr} />
                                             <Kbd.Content>Shift</Kbd.Content>
+                                        </Kbd>
+                                        <Kbd>
                                             <Kbd.Content>P</Kbd.Content>
                                         </Kbd>
                                     </div>

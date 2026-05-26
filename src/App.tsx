@@ -394,7 +394,7 @@ function InnerApp() {
                                 className="absolute inset-0"
                                 style={{ zIndex: 1 }}
                             >
-                                <SettingsPage theme={currentTheme} />
+                                <SettingsPage theme={currentTheme} openAbout={openAbout} />
                             </div>
                         )}
                         {currentId === ABOUT_TAB_ID && (

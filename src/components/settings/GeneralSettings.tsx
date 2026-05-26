@@ -5,7 +5,7 @@ import {info} from "@tauri-apps/plugin-log";
 import {Button, Label, ListBox, Select, Switch} from "@heroui/react";
 import {isMacOS} from "../../lib/utils.ts";
 
-export default function GeneralSettings({ borderColor }: { borderColor: string }) {
+export default function GeneralSettings({ borderColor, openAbout }: { borderColor: string, openAbout: () => void }) {
     const { config, updateConfig } = useGlobalConfig();
     const t = useI18n();
 
@@ -185,6 +185,13 @@ export default function GeneralSettings({ borderColor }: { borderColor: string }
                     {isDirty && (
                         <span className="text-xs text-muted">{t["Unsaved changes"]}</span>
                     )}
+                    <div className="w-full grow"/>
+                    <Button
+                        variant="outline"
+                        onPress={openAbout}
+                    >
+                        {t["About"]} Lumina Terminal
+                    </Button>
                 </div>
             </div>
         </div>
