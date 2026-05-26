@@ -22,6 +22,7 @@ import { info, debug, error } from "@tauri-apps/plugin-log";
 import {isLinux} from "./lib/utils.ts";
 import {usePaddingOffset} from "./hooks/paddingOffset.ts";
 import {getMaximized} from "./hooks/maximized.ts";
+import ResizeHandle from "./components/ResizeHandle.tsx";
 
 function InnerApp() {
     const {config, updateConfig} = useGlobalConfig();
@@ -360,7 +361,7 @@ function InnerApp() {
 
         return (
             <div
-                className="w-screen h-screen overflow-hidden flex flex-row"
+                className="w-full h-full overflow-hidden flex flex-row"
                 style={{background: currentTheme?.background ?? "black"}}
             >
                 <CommandPalette
@@ -453,7 +454,7 @@ function App() {
 
     return (
         <div
-            className="w-screen h-screen overflow-hidden"
+            className="w-screen h-screen overflow-hidden relative"
             style={{
                 padding: paddingOffset,
                 background: "transparent",
@@ -467,6 +468,7 @@ function App() {
             >
                 <InnerApp/>
             </div>
+            {isLinux() && <ResizeHandle size={paddingOffset} />}
         </div>
     );
 }
