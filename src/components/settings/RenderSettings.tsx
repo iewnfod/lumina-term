@@ -28,11 +28,6 @@ export default function RenderSettings({
         parseProfileTheme(draft).then(setThemePreview);
     }, [draft.themePath, draft.theme]);
 
-    const paddingValue =
-        typeof draft.padding === "number"
-            ? draft.padding
-            : draft.padding?.x ?? draft.padding?.left ?? 0;
-
     const fields = (
         <div className="flex flex-col gap-4">
             {/* Rows and Columns */}
@@ -72,9 +67,9 @@ export default function RenderSettings({
                         id={`${idPrefix}-padding`}
                         type="number"
                         min={0}
-                        value={String(paddingValue)}
+                        value={String(draft.padding ?? "")}
                         onChange={(e) =>
-                            updateDraft({ padding: Math.max(0, +e.target.value || 0) })
+                            updateDraft({ padding: e.target.value ? Math.max(0, +e.target.value || 0) : undefined })
                         }
                         className="w-24"
                     />
