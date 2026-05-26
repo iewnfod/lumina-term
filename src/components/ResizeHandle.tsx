@@ -1,6 +1,7 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import type { ResizeDirection } from "@tauri-apps/api/window";
 import { useCallback } from "react";
+
+type ResizeDirection = 'East' | 'North' | 'NorthEast' | 'NorthWest' | 'South' | 'SouthEast' | 'SouthWest' | 'West';
 
 interface ResizeHandleProps {
     size: number;
