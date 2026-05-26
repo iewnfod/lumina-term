@@ -27,7 +27,8 @@
     "react": "^19.1.0",
     "react-confetti-boom": "^2.0.1",
     "react-dom": "^19.1.0",
-    "tailwindcss": "^4.3.0"
+    "tailwindcss": "^4.3.0",
+    "vite-plugin-compression": "^0.5.1"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",
