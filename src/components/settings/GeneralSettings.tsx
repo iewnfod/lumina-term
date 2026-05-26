@@ -174,18 +174,19 @@ export default function GeneralSettings({ borderColor, openAbout }: { borderColo
             </div>
             {/* Fixed bottom: Save */}
             <div className="shrink-0 border-t pt-3" style={{ borderColor: borderColor }}>
-                <div className="flex items-center gap-3">
-                    <Button
-                        variant="primary"
-                        isDisabled={!isDirty}
-                        onPress={handleSave}
-                    >
-                        {t["Save"]}
-                    </Button>
-                    {isDirty && (
-                        <span className="text-xs text-muted">{t["Unsaved changes"]}</span>
-                    )}
-                    <div className="w-full grow"/>
+                <div className="flex items-center gap-3 justify-between">
+                    <div className="flex items-center gap-3">
+                        <Button
+                            variant="primary"
+                            isDisabled={!isDirty}
+                            onPress={handleSave}
+                        >
+                            {t["Save"]}
+                        </Button>
+                        {isDirty && (
+                            <span className="text-xs text-muted">{t["Unsaved changes"]}</span>
+                        )}
+                    </div>
                     <Button
                         variant="outline"
                         onPress={openAbout}
