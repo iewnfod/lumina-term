@@ -108,7 +108,7 @@ export default function RenderSettings({
                 <div className="flex flex-col gap-1.5">
                     <Label>{t["Font Weight"]}</Label>
                     <Select
-                        selectedKey={String(draft.fontWeight ?? "normal")}
+                        selectedKey={String(draft.fontWeight)}
                         onSelectionChange={(key) => {
                             if (key) {
                                 updateDraft({ fontWeight: key as FontWeight });
@@ -134,7 +134,7 @@ export default function RenderSettings({
                 <div className="flex flex-col gap-1.5">
                     <Label>{t["Font Style"]}</Label>
                     <Select
-                        selectedKey={draft.fontStyle ?? "normal"}
+                        selectedKey={draft.fontStyle}
                         onSelectionChange={(key) => {
                             if (key) {
                                 updateDraft({ fontStyle: key as FontStyle });
