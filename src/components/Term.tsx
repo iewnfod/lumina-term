@@ -70,8 +70,8 @@ export default function Term(props : TermProps) {
             heightOffset = window.innerHeight - termRef.current.clientHeight;
         }
         const padding = parseProfilePadding(profile, paddingOffset);
-        const pixelWidth = Math.floor(profile.cols * charWidth) + widthOffset + padding.left + padding.right;
-        const pixelHeight = Math.floor(profile.rows * charHeight) + heightOffset + padding.top + padding.bottom;
+        const pixelWidth = Math.floor((profile.cols ?? 80) * charWidth) + widthOffset + padding.left + padding.right;
+        const pixelHeight = Math.floor((profile.rows ?? 24) * charHeight) + heightOffset + padding.top + padding.bottom;
         return {width: pixelWidth, height: pixelHeight};
     }, [profile, paddingOffset]);
 

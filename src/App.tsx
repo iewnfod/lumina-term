@@ -8,7 +8,7 @@ import {getCurrentWindow} from "@tauri-apps/api/window";
 import TitleBar from "./components/TitleBar.tsx";
 import TabBar from "./components/TabBar.tsx";
 import {ITheme} from "@xterm/xterm";
-import {parseProfileTheme} from "./lib/term.ts";
+import {parseProfile, parseProfileTheme} from "./lib/term.ts";
 import {invoke} from "@tauri-apps/api/core";
 import CommandPalette, {CommandAction} from "./components/CommandPalette.tsx";
 import {isColorDark} from "./hooks/surfaceColors.ts";
@@ -54,17 +54,18 @@ function InnerApp() {
     currentIdRef.current = currentId;
     const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
-    const newTerminal = (profile: TerminalProfile) => {
+    const newTerminal = useCallback(async (profile: TerminalProfile) => {
         const id = crypto.randomUUID();
+        const p = await parseProfile(profile, config.globalProfile);
         setTerminals((prevState) => {
             let newState = {...prevState};
-            newState[id] = profile;
+            newState[id] = p;
             return newState;
         });
         setIds((prevState) => [...prevState, id]);
         setCurrentId(id);
         info(`New terminal: profile=${profile.name} id=${id}`);
-    };
+    }, [config]);
 
     const closeTerminal = (id: string) => {
         debug(`closeTerminal called for id=${id}`);

@@ -1,12 +1,18 @@
 import {ITerminalOptions} from "@xterm/xterm";
 
-export interface TerminalProfile extends ITerminalOptions {
+export type TerminalPadding = number | {x?: number, y?: number, left?: number, right?: number, top?: number, bottom?: number};
+export type FontStyle = "normal" | "italic";
+
+export interface TerminalRenderOptions extends ITerminalOptions {
+    cols?: number; rows?: number;
+    webgl?: boolean;
+    padding?: TerminalPadding;
+    themePath?: string;
+    fontStyle?: FontStyle;
+}
+
+export interface TerminalProfile extends TerminalRenderOptions {
     name: string;
     exePath: string;
-    cols: number; rows: number;
     default?: boolean;
-    webgl?: boolean;
-    padding?: number | {x?: number, y?: number, left?: number, right?: number, top?: number, bottom?: number};
-    themePath?: string;
-    fontStyle?: "normal" | "italic";
 }

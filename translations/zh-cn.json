@@ -38,6 +38,7 @@
     "Create a new terminal with profile \"{name}\"": "使用配置 \"{name}\" 新建一个终端",
     "Settings": "设置",
     "General": "常规",
+    "Global Profile": "全局配置",
     "Add Profile": "添加配置",
     "Delete Profile": "删除配置",
     "Profiles": "配置文件",
@@ -71,5 +72,9 @@
     "Unsaved changes": "未保存的更改",
     "WebGL Renderer": "WebGL 渲染器",
     "Drop file to insert path": "拖放文件以插入路径",
-    "Version": "版本"
+    "Version": "版本",
+    "Font Style": "字体样式",
+    "Normal": "正常",
+    "Render Settings": "渲染设置",
+    "webgl description": "使用 WebGL 加速终端渲染以获取更高性能"
 }

@@ -1,4 +1,4 @@
-import {TerminalProfile} from "./terminal.ts";
+import {TerminalProfile, TerminalRenderOptions} from "./terminal.ts";
 import {Languages} from "../hooks/i18n.tsx";
 
 export type Actions = "newTab" | "openConfigFile" | "closeTab" | "openCommandPalette" | "openSettings" | "toTab";
@@ -14,6 +14,7 @@ export interface Binding {
 export interface GlobalConfig {
     language: Languages;
     profiles: TerminalProfile[];
+    globalProfile?: TerminalRenderOptions;
     showTabBar?: boolean;
     bindings?: Binding[];
     closeWindowOnLastTab?: boolean;

@@ -38,6 +38,7 @@
     "Create a new terminal with profile \"{name}\"": "Create a new terminal with profile \"{name}\"",
     "Settings": "Settings",
     "General": "General",
+    "Global Profile": "Global Profile",
     "Add Profile": "Add Profile",
     "Delete Profile": "Delete Profile",
     "Profiles": "Profiles",
@@ -71,5 +72,9 @@
     "Unsaved changes": "Unsaved changes",
     "WebGL Renderer": "WebGL Renderer",
     "Drop file to insert path": "Drop file to insert path",
-    "Version": "Version"
+    "Version": "Version",
+    "Font Style": "Font Style",
+    "Normal": "Normal",
+    "Render Settings": "Render Settings",
+    "webgl description": "Use WebGL to accelerate terminal rendering for better performance"
 }

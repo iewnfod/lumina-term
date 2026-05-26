@@ -1,4 +1,4 @@
-import {TerminalProfile} from "../types/terminal.ts";
+import {TerminalProfile, TerminalRenderOptions} from "../types/terminal.ts";
 import {ITheme} from "@xterm/xterm";
 import {DEFAULT_TERMINAL_THEME} from "../constants.ts";
 import {invoke} from "@tauri-apps/api/core";
@@ -31,8 +31,8 @@ export function parseProfilePadding(profile: TerminalProfile, paddingOffset: num
     };
 }
 
-export async function parseProfileTheme(profile: TerminalProfile) {
-    let theme: ITheme = DEFAULT_TERMINAL_THEME;
+export async function parseProfileTheme(profile: TerminalRenderOptions, defaultTheme?: ITheme) {
+    let theme: ITheme = defaultTheme ?? DEFAULT_TERMINAL_THEME;
     if (profile.themePath) {
         const basePath = await appDataDir();
         const fullPath = await join(basePath, profile.themePath);
@@ -60,4 +60,16 @@ export async function parseProfileTheme(profile: TerminalProfile) {
         theme = {...theme, ...profile.theme};
     }
     return theme;
+}
+
+export async function parseProfile(profile: TerminalProfile, globalProfile?: TerminalRenderOptions): Promise<TerminalProfile> {
+    const p = {...globalProfile, ...profile};
+    if (globalProfile) {
+        let globalTheme = await parseProfileTheme(globalProfile);
+        p.theme = await parseProfileTheme(profile, globalTheme);
+    } else {
+        p.theme = await parseProfileTheme(p);
+    }
+    delete p.themePath;
+    return p;
 }
