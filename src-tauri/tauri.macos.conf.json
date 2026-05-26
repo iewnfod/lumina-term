@@ -1,4 +1,24 @@
 {
+    "app": {
+        "windows": [
+            {
+                "title": "Lumina Terminal",
+                "width": 600,
+                "height": 400,
+                "minWidth": 600,
+                "minHeight": 400,
+                "transparent": true,
+                "decorations": true,
+                "visible": false,
+                "titleBarStyle": "Overlay",
+                "hiddenTitle": true,
+                "trafficLightPosition": {
+                    "x": 18,
+                    "y": 18
+                }
+            }
+        ]
+    },
     "bundle": {
         "icon": [
             "icons/icon.icns"

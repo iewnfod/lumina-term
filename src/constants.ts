@@ -118,5 +118,3 @@ export const DEFAULT_CONFIG: GlobalConfig = {
 export const SETTINGS_TAB_ID = "__lum__settings__";
 
 export const ABOUT_TAB_ID = "__lum__about__";
-
-export const MACOS_PADDING_OFFSET = 8;

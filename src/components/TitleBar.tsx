@@ -88,7 +88,7 @@ export default function TitleBar({
     const bg = theme?.background ?? "black";
     const fg = theme?.foreground ?? "white";
 
-    const { borderColor } = useSurfaceColors(bg);
+    const { borderColor, hoverOverlay, activeOverlay } = useSurfaceColors(bg);
     const macOSTitleButtonMarginLeft = tabBarVisible ? 8 : 88;
     const size = 36;
 
@@ -104,16 +104,24 @@ export default function TitleBar({
                 }}
             >
                 <button
-                    className="p-1 rounded-md hover:bg-white/10 transition-all duration-300 cursor-pointer"
+                    className="p-1 rounded-lg transition-all duration-200 cursor-pointer"
                     style={{ color: fg, marginLeft: macOSTitleButtonMarginLeft }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = hoverOverlay)}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                    onMouseDown={(e) => (e.currentTarget.style.background = activeOverlay)}
+                    onMouseUp={(e) => (e.currentTarget.style.background = hoverOverlay)}
                     onClick={() => { info(`Tab bar ${tabBarVisible ? "hidden" : "shown"}`); onToggleTabBar(); }}
                 >
                     {tabBarVisible ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
                 </button>
                 <div className="flex-1" data-tauri-drag-region />
                 <button
-                    className="mr-2 p-1 rounded-md hover:bg-white/10 transition-colors cursor-pointer"
+                    className="mr-2 p-1 rounded-lg transition-all duration-200 cursor-pointer"
                     style={{ color: fg }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = hoverOverlay)}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                    onMouseDown={(e) => (e.currentTarget.style.background = activeOverlay)}
+                    onMouseUp={(e) => (e.currentTarget.style.background = hoverOverlay)}
                     onClick={() => { info("Settings opened from title bar"); onOpenSettings(); }}
                 >
                     <Settings size={18} />

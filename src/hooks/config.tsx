@@ -4,7 +4,6 @@ import {LazyStore} from "@tauri-apps/plugin-store";
 import {TerminalProfile} from "../types/terminal.ts";
 import {getCurrentWindow} from "@tauri-apps/api/window";
 import {CONFIG_SAVE_PATH, DEFAULT_CONFIG} from "../constants.ts";
-import {isMacOS} from "../lib/utils.ts";
 import { info, debug } from "@tauri-apps/plugin-log";
 
 const store = new LazyStore(CONFIG_SAVE_PATH);
@@ -81,13 +80,6 @@ export function GlobalConfigProvider({ children }: { children: ReactNode }) {
             });
         }
     }, [isLoading]);
-
-    useEffect(() => {
-        if (!isMacOS()) {
-            const window = getCurrentWindow();
-            window.setDecorations(false).then();
-        }
-    }, []);
 
     return (
         <GlobalConfigContext.Provider value={{config, updateConfig, newProfile, isLoading}}>

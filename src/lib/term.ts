@@ -1,11 +1,10 @@
 import {TerminalProfile} from "../types/terminal.ts";
 import {ITheme} from "@xterm/xterm";
-import {DEFAULT_TERMINAL_THEME, MACOS_PADDING_OFFSET} from "../constants.ts";
+import {DEFAULT_TERMINAL_THEME} from "../constants.ts";
 import {invoke} from "@tauri-apps/api/core";
-import {isMacOS} from "./utils.ts";
 import {appDataDir, join} from "@tauri-apps/api/path";
 
-export function parseProfilePadding(profile: TerminalProfile) {
+export function parseProfilePadding(profile: TerminalProfile, paddingOffset: number) {
     let paddingLeft = 0, paddingRight = 0, paddingTop = 0, paddingBottom = 0;
     if (profile.padding) {
         if (typeof profile.padding === "number") {
@@ -22,10 +21,8 @@ export function parseProfilePadding(profile: TerminalProfile) {
             paddingBottom = profile.padding.bottom ?? paddingBottom;
         }
     }
-    if (isMacOS()) {
-        paddingLeft += MACOS_PADDING_OFFSET; paddingRight += MACOS_PADDING_OFFSET;
-        paddingTop += MACOS_PADDING_OFFSET; paddingBottom += MACOS_PADDING_OFFSET;
-    }
+    paddingLeft += paddingOffset; paddingRight += paddingOffset;
+    paddingTop += paddingOffset; paddingBottom += paddingOffset;
     return {
         left: paddingLeft,
         right: paddingRight,

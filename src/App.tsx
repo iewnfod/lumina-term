@@ -19,8 +19,10 @@ import SettingsPage from "./pages/SettingsPage.tsx";
 import AboutPage from "./pages/AboutPage.tsx";
 import {SETTINGS_TAB_ID, ABOUT_TAB_ID} from "./constants.ts";
 import { info, debug, error } from "@tauri-apps/plugin-log";
+import {isLinux} from "./lib/utils.ts";
+import {usePaddingOffset} from "./hooks/paddingOffset.ts";
 
-function App() {
+function InnerApp() {
     const {config, updateConfig} = useGlobalConfig();
     const t = useI18n();
     const [ids, setIds] = useState<string[]>([]);
@@ -442,6 +444,29 @@ function App() {
             <WelcomePage/>
         );
     }
+}
+
+function App() {
+    const paddingOffset = usePaddingOffset();
+
+    return (
+        <div
+            className="w-screen h-screen overflow-hidden"
+            style={{
+                padding: paddingOffset,
+                background: "transparent",
+            }}
+        >
+            <div
+                className="w-full h-full overflow-hidden"
+                style={{
+                    boxShadow: isLinux() ? "0 5px 15px rgba(0, 0, 0, 0.3), 0 1px 5px rgba(0, 0, 0, 0.2)" : undefined,
+                }}
+            >
+                <InnerApp/>
+            </div>
+        </div>
+    );
 }
 
 export default App;

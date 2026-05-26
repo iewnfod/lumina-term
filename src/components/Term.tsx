@@ -14,6 +14,7 @@ import {useGlobalConfig} from "../hooks/config.tsx";
 import {useI18n} from "../hooks/i18n.tsx";
 import { info, debug } from "@tauri-apps/plugin-log";
 import {getCurrentWebview} from "@tauri-apps/api/webview";
+import {usePaddingOffset} from "../hooks/paddingOffset.ts";
 
 let hasAppliedInitialWindowSize = false;
 
@@ -33,7 +34,8 @@ export default function Term(props : TermProps) {
     const term = useRef<Terminal | null>(null);
     const termRef = useRef<HTMLDivElement>(null);
     const isInitialized = useRef<boolean>(false);
-    const padding = useMemo(() => parseProfilePadding(profile), [profile]);
+    const paddingOffset = usePaddingOffset();
+    const padding = useMemo(() => parseProfilePadding(profile, paddingOffset), [profile, paddingOffset]);
     const {config} = useGlobalConfig();
     const t = useI18n();
     const [isDragOver, setIsDragOver] = useState(false);
@@ -67,11 +69,11 @@ export default function Term(props : TermProps) {
             widthOffset = window.innerWidth - termRef.current.clientWidth;
             heightOffset = window.innerHeight - termRef.current.clientHeight;
         }
-        const padding = parseProfilePadding(profile);
+        const padding = parseProfilePadding(profile, paddingOffset);
         const pixelWidth = Math.floor(profile.cols * charWidth) + widthOffset + padding.left + padding.right;
         const pixelHeight = Math.floor(profile.rows * charHeight) + heightOffset + padding.top + padding.bottom;
         return {width: pixelWidth, height: pixelHeight};
-    }, [profile]);
+    }, [profile, paddingOffset]);
 
     const handleActions = (action: Actions, args?: Record<string, string>) => {
         info(`Term action: ${action}${args ? ` args=${JSON.stringify(args)}` : ""}`);

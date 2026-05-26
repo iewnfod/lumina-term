@@ -17,3 +17,7 @@ export async function openConfigFile() {
 export function isMacOS() {
     return platform() === "macos";
 }
+
+export function isLinux() {
+    return platform() === "linux";
+}
