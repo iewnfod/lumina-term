@@ -30,3 +30,8 @@ tauri-plugin-os = "2"
 tauri-plugin-log = "2"
 log = "0.4"
 
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+overflow-checks = false

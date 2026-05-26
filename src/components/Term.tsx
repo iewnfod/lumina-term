@@ -11,6 +11,7 @@ import {loadBindings, parseBindings} from "../lib/bindings.ts";
 import {Actions} from "../types/config.ts";
 import {openConfigFile} from "../lib/utils.ts";
 import {useGlobalConfig} from "../hooks/config.tsx";
+import {useI18n} from "../hooks/i18n.tsx";
 import { info, debug } from "@tauri-apps/plugin-log";
 import {getCurrentWebview} from "@tauri-apps/api/webview";
 
@@ -34,6 +35,7 @@ export default function Term(props : TermProps) {
     const isInitialized = useRef<boolean>(false);
     const padding = useMemo(() => parseProfilePadding(profile), [profile]);
     const {config} = useGlobalConfig();
+    const t = useI18n();
     const [isDragOver, setIsDragOver] = useState(false);
     const isActiveRef = useRef(isActive);
     isActiveRef.current = isActive;
@@ -288,7 +290,7 @@ export default function Term(props : TermProps) {
             {isDragOver && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center bg-blue-500/20 border-2 border-blue-400 border-dashed pointer-events-none">
                     <div className="bg-black/70 text-white px-4 py-2 rounded-lg text-sm">
-                        Drop file to insert path
+                        {t["Drop file to insert path"]}
                     </div>
                 </div>
             )}

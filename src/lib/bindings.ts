@@ -98,7 +98,7 @@ export function loadBindings(
         debug(`XTerm Custom Key with key ${event.key} and type ${event.type}`);
 
         // Swap Ctrl+C / Ctrl+Shift+C behavior on non-macOS when copyWithCtrl is enabled
-        if (!isMacOS() && copyWithCtrl && !event.altKey && !event.metaKey && event.key.toLowerCase() === "c") {
+        if (!isMacOS() && copyWithCtrl && event.ctrlKey && !event.altKey && !event.metaKey && event.key.toLowerCase() === "c") {
             if (!event.shiftKey) {
                 // Ctrl+C → copy selection
                 const selection = term.getSelection();

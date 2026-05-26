@@ -69,5 +69,6 @@
     "Copy with Ctrl+C": "使用 Ctrl+C 复制",
     "Swap Ctrl+C and Ctrl+Shift+C for copy and interrupt on non-macOS systems": "交换 Ctrl+C（复制）与 Ctrl+Shift+C（中断）的行为",
     "Unsaved changes": "未保存的更改",
-    "WebGL Renderer": "WebGL 渲染器"
+    "WebGL Renderer": "WebGL 渲染器",
+    "Drop file to insert path": "拖放文件以插入路径"
 }
