@@ -1,8 +1,9 @@
 import {useEffect, useState} from "react";
 import {isLinux, isMacOS} from "../lib/utils.ts";
-import {getCurrentWindow} from "@tauri-apps/api/window";
+import {getMaximized} from "./maximized.ts";
 
 export function usePaddingOffset() {
+    const isMaximized = getMaximized()
     const [offset, setOffset] = useState(0);
 
     const loadDefaultPadding = () => {
@@ -22,24 +23,12 @@ export function usePaddingOffset() {
     }
 
     useEffect(() => {
-        loadDefaultPadding();
-
-        const resizeHandler = () => {
-            getCurrentWindow().isMaximized().then((maximized) => {
-                if (maximized) {
-                    loadMaximizedPadding();
-                } else {
-                    loadDefaultPadding();
-                }
-            });
-        };
-
-        window.addEventListener("resize", resizeHandler);
-
-        return () => {
-            window.removeEventListener("resize", resizeHandler);
-        };
-    }, []);
+        if (isMaximized) {
+            loadMaximizedPadding();
+        } else {
+            loadDefaultPadding();
+        }
+    }, [isMaximized]);
 
     return offset;
 }

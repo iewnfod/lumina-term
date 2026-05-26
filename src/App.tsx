@@ -21,6 +21,7 @@ import {SETTINGS_TAB_ID, ABOUT_TAB_ID} from "./constants.ts";
 import { info, debug, error } from "@tauri-apps/plugin-log";
 import {isLinux} from "./lib/utils.ts";
 import {usePaddingOffset} from "./hooks/paddingOffset.ts";
+import {getMaximized} from "./hooks/maximized.ts";
 
 function InnerApp() {
     const {config, updateConfig} = useGlobalConfig();
@@ -447,6 +448,7 @@ function InnerApp() {
 }
 
 function App() {
+    const isMaximized = getMaximized();
     const paddingOffset = usePaddingOffset();
 
     return (
@@ -458,7 +460,7 @@ function App() {
             }}
         >
             <div
-                className="w-full h-full overflow-hidden"
+                className={`w-full h-full overflow-hidden ${isMaximized ? "" : "rounded-lg"}`}
                 style={{
                     boxShadow: isLinux() ? "0 5px 15px rgba(0, 0, 0, 0.3), 0 1px 5px rgba(0, 0, 0, 0.2)" : undefined,
                 }}
