@@ -64,10 +64,12 @@ pub fn start_terminal(
         if let Some(ref identity_file) = ssh.identity_file {
             c.args(&["-i", identity_file]);
         }
+        c.env("TERM", "xterm-256color");
         c
     } else {
         let mut c = CommandBuilder::new(exe_path);
         c.args(&["--login", "-i"]);
+        c.env("TERM", "xterm-256color");
         c
     };
     let child: CommandChild = pty_pair
