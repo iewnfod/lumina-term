@@ -46,6 +46,7 @@ pub fn run() {
             is_debug,
             get_log_dir,
             get_commit_hash,
+            parse_ssh_config,
             #[cfg(debug_assertions)]
             open_devtools,
         ])

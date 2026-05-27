@@ -1,4 +1,4 @@
-import {TerminalProfile} from "../../types/terminal.ts";
+import {SSHConfig, TerminalProfile} from "../../types/terminal.ts";
 import {useGlobalConfig} from "../../hooks/config.tsx";
 import {useI18n} from "../../hooks/i18n.tsx";
 import {useShells} from "../../hooks/useShells.ts";
@@ -50,6 +50,14 @@ export default function ProfileSettings({
         setDraft((prev) => (prev ? { ...prev, ...updates } : null));
     };
 
+    const updateSsh = (updates: Partial<SSHConfig>) => {
+        setDraft((prev) => {
+            if (!prev) return null;
+            const ssh = { ...prev.ssh, ...updates } as SSHConfig;
+            return { ...prev, ssh };
+        });
+    };
+
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
 
@@ -75,6 +83,8 @@ export default function ProfileSettings({
         );
     }
 
+    const profileType = draft.type ?? "local";
+
     const handleSave = () => {
         if (!draft) return;
         const oldName = profile.name;
@@ -86,6 +96,8 @@ export default function ProfileSettings({
             fontFamily: draft.fontFamily?.trim() || undefined,
             fontStyle: draft.fontStyle === "italic" ? "italic" : "normal",
             themePath: draft.themePath?.trim() || undefined,
+            type: draft.type ?? "local",
+            ssh: draft.type === "remote" ? draft.ssh : undefined,
         };
         const newName = trimmed.name;
         if (!newName) return;
@@ -162,7 +174,39 @@ export default function ProfileSettings({
                 )}
 
                 <div className="flex flex-col gap-4">
-                    {/* Exe Path */}
+                    {/* Profile Type */}
+                    <div className="flex flex-col gap-1.5">
+                        <Label>{t["Profile Type"]}</Label>
+                        <Select
+                            selectedKey={profileType}
+                            onSelectionChange={(key) => {
+                                const newType = key as "local" | "remote";
+                                updateDraft({
+                                    type: newType,
+                                    ssh: newType === "remote" ? (draft.ssh ?? { host: "", port: 22 }) : undefined,
+                                });
+                            }}
+                            className="max-w-sm"
+                        >
+                            <Select.Trigger>
+                                <Select.Value />
+                                <Select.Indicator />
+                            </Select.Trigger>
+                            <Select.Popover>
+                                <ListBox>
+                                    <ListBox.Item id="local" key="local" textValue="Local">
+                                        {t["Local"]}
+                                    </ListBox.Item>
+                                    <ListBox.Item id="remote" key="remote" textValue="Remote (SSH)">
+                                        {t["Remote (SSH)"]}
+                                    </ListBox.Item>
+                                </ListBox>
+                            </Select.Popover>
+                        </Select>
+                    </div>
+
+                    {/* Exe Path (only for local) */}
+                    {profileType === "local" && (
                     <div className="flex flex-col gap-1.5">
                         <Label htmlFor="profile-exe-path" isRequired>{t["Exe Path"]}</Label>
                         <Select
@@ -209,6 +253,73 @@ export default function ProfileSettings({
                             </div>
                         )}
                     </div>
+                    )}
+
+                    {/* SSH Config Fields */}
+                    {profileType === "remote" && (
+                        <div className="flex flex-col gap-3">
+                            <div className="flex flex-col gap-1.5">
+                                <Label htmlFor="ssh-host" isRequired>{t["Host"]}</Label>
+                                <Input
+                                    id="ssh-host"
+                                    value={draft.ssh?.host ?? ""}
+                                    onChange={(e) => updateSsh({ host: e.target.value })}
+                                    className="max-w-sm"
+                                    placeholder="e.g. 192.168.1.100 or example.com"
+                                />
+                            </div>
+                            <div className="flex flex-row gap-4">
+                                <div className="flex flex-col gap-1.5">
+                                    <Label htmlFor="ssh-port">{t["Port"]}</Label>
+                                    <Input
+                                        id="ssh-port"
+                                        type="number"
+                                        min={1}
+                                        max={65535}
+                                        value={String(draft.ssh?.port ?? 22)}
+                                        onChange={(e) => updateSsh({ port: e.target.value ? Math.max(1, +e.target.value || 22) : undefined })}
+                                        className="w-28"
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                    <Label htmlFor="ssh-user">{t["User"]}</Label>
+                                    <Input
+                                        id="ssh-user"
+                                        value={draft.ssh?.user ?? ""}
+                                        onChange={(e) => updateSsh({ user: e.target.value || undefined })}
+                                        className="w-48"
+                                        placeholder="e.g. root"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex flex-col gap-1.5">
+                                <Label htmlFor="ssh-identity-file">{t["Identity File"]}</Label>
+                                <div className="flex flex-row gap-2">
+                                    <Input
+                                        id="ssh-identity-file"
+                                        value={draft.ssh?.identityFile ?? ""}
+                                        onChange={(e) => updateSsh({ identityFile: e.target.value || undefined })}
+                                        className="flex-1 max-w-sm"
+                                        placeholder="e.g. ~/.ssh/id_ed25519"
+                                    />
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onPress={async () => {
+                                            const file = await open({
+                                                multiple: false,
+                                                directory: false,
+                                                filters: [{ name: "All Files", extensions: ["*"] }],
+                                            });
+                                            if (file) updateSsh({ identityFile: file });
+                                        }}
+                                    >
+                                        {t["Select"]}
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     <RenderSettings draft={draft} updateDraft={updateDraft} idPrefix="profile" defaultExpanded={false} />
                 </div>

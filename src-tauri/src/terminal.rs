@@ -3,9 +3,19 @@ use std::thread;
 use std::time::Duration;
 
 use portable_pty::{CommandBuilder, PtySize};
+use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, State};
 
 use crate::state::{CommandChild, SharedChild, TerminalState};
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SshConfig {
+    pub host: String,
+    pub port: Option<u16>,
+    pub user: Option<String>,
+    pub identity_file: Option<String>,
+}
 
 #[tauri::command]
 pub fn start_terminal(
@@ -15,6 +25,8 @@ pub fn start_terminal(
     state: State<TerminalState>,
     cols: Option<u16>,
     rows: Option<u16>,
+    profile_type: Option<String>,
+    ssh_config: Option<SshConfig>,
 ) {
     {
         let terminals = state
@@ -36,8 +48,28 @@ pub fn start_terminal(
     };
     let pty_pair = pty_system.openpty(size).unwrap();
 
-    let mut cmd = CommandBuilder::new(exe_path);
-    cmd.args(&["--login", "-i"]);
+    let cmd = if profile_type.as_deref() == Some("remote") {
+        let ssh = ssh_config.as_ref().expect("SSH config required for remote profile");
+        let ssh_exe = if exe_path.is_empty() { "ssh".to_string() } else { exe_path };
+        let mut c = CommandBuilder::new(ssh_exe);
+        let user_host = if let Some(ref user) = ssh.user {
+            format!("{}@{}", user, ssh.host)
+        } else {
+            ssh.host.clone()
+        };
+        c.arg(&user_host);
+        if let Some(port) = ssh.port {
+            c.args(&["-p", &port.to_string()]);
+        }
+        if let Some(ref identity_file) = ssh.identity_file {
+            c.args(&["-i", identity_file]);
+        }
+        c
+    } else {
+        let mut c = CommandBuilder::new(exe_path);
+        c.args(&["--login", "-i"]);
+        c
+    };
     let child: CommandChild = pty_pair
         .slave
         .spawn_command(cmd)

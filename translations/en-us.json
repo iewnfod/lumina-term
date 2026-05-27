@@ -77,5 +77,15 @@
     "Normal": "Normal",
     "Render Settings": "Render Settings",
     "webgl description": "Use WebGL to accelerate terminal rendering for better performance",
-    "Custom": "Custom"
+    "Custom": "Custom",
+    "Profile Type": "Profile Type",
+    "Local": "Local",
+    "Remote (SSH)": "Remote (SSH)",
+    "Host": "Host",
+    "Port": "Port",
+    "User": "User",
+    "Identity File": "Identity File",
+    "Import from SSH Config": "Import from .ssh/config",
+    "New Local Profile": "New Local Profile",
+    "New Remote Profile": "New Remote Profile"
 }

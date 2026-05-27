@@ -77,5 +77,15 @@
     "Normal": "正常",
     "Render Settings": "渲染设置",
     "webgl description": "使用 WebGL 加速终端渲染以获取更高性能",
-    "Custom": "自定义"
+    "Custom": "自定义",
+    "Profile Type": "配置类型",
+    "Local": "本地",
+    "Remote (SSH)": "远程 (SSH)",
+    "Host": "主机地址",
+    "Port": "端口",
+    "User": "用户名",
+    "Identity File": "密钥文件",
+    "Import from SSH Config": "从 .ssh/config 导入",
+    "New Local Profile": "新建本地配置",
+    "New Remote Profile": "新建远程配置"
 }

@@ -251,7 +251,11 @@ export default function Term(props : TermProps) {
         }).then(() => {
             invoke("start_terminal", {
                 id,
-                ...profile,
+                exePath: profile.exePath,
+                cols: profile.cols,
+                rows: profile.rows,
+                profileType: profile.type ?? "local",
+                sshConfig: profile.type === "remote" ? profile.ssh : undefined,
             }).then(() => {
                 info(`Terminal started: id=${id} profile=${profile.name}`);
                 invoke("resize_terminal", {id, cols: term.current!.cols, rows: term.current!.rows}).then();

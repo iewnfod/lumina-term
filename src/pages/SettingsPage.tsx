@@ -19,6 +19,7 @@ import ProfileSettings from "../components/settings/ProfileSettings.tsx";
 import DeveloperSettings from "../components/settings/DeveloperSettings.tsx";
 import GlobalProfileSettings from "../components/settings/GlobalProfileSettings.tsx";
 import GeneralSettings from "../components/settings/GeneralSettings.tsx";
+import AddProfileModal from "../components/settings/AddProfileModal.tsx";
 
 type SettingsSection = "general" | "globalProfile" | string;
 
@@ -63,6 +64,7 @@ export default function SettingsPage({ theme, openAbout }: { theme: ITheme | nul
     const t = useI18n();
     const [selectedSection, setSelectedSection] = useState<SettingsSection>("general");
     const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+    const [showAddModal, setShowAddModal] = useState(false);
 
     const handleSectionChange = (section: SettingsSection) => {
         debug(`Settings section changed to: ${section}`);
@@ -87,22 +89,22 @@ export default function SettingsPage({ theme, openAbout }: { theme: ITheme | nul
     );
 
     const handleAddProfile = useCallback(() => {
-        const baseName = t["Untitled Profile"];
+        setShowAddModal(true);
+    }, []);
+
+    const createProfile = useCallback((profile: TerminalProfile) => {
+        const baseName = profile.name || t["Untitled Profile"];
         let name = baseName;
         let i = 1;
         while (config.profiles.some((p) => p.name === name)) {
             name = `${baseName} ${i}`;
             i++;
         }
+        const finalProfile = { ...profile, name };
         info(`Profile added: ${name}`);
-        const profile: TerminalProfile = {
-            name,
-            exePath: "",
-            rows: 24,
-            cols: 80,
-        };
-        newProfile(profile);
+        newProfile(finalProfile);
         setSelectedSection(name);
+        setShowAddModal(false);
     }, [config.profiles, newProfile, t]);
 
     return (
@@ -254,6 +256,14 @@ export default function SettingsPage({ theme, openAbout }: { theme: ITheme | nul
                     </Modal.Dialog>
                 </Modal.Container>
             </Modal.Backdrop>
+
+            {/* Add Profile Modal */}
+            <AddProfileModal
+                isOpen={showAddModal}
+                onOpenChange={setShowAddModal}
+                onCreate={createProfile}
+                borderColor={colors.borderColor}
+            />
         </div>
     );
 }

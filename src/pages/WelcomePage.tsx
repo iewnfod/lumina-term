@@ -5,7 +5,7 @@ import Icon from "../assets/icon.svg"
 import {useGlobalConfig} from "../hooks/config.tsx";
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {getCurrentWindow, LogicalSize} from "@tauri-apps/api/window";
-import {TerminalProfile} from "../types/terminal.ts";
+import {SSHConfig, SSHHostEntry, TerminalProfile} from "../types/terminal.ts";
 import {open} from "@tauri-apps/plugin-dialog";
 import {invoke} from "@tauri-apps/api/core";
 import Confetti from "react-confetti-boom";
@@ -97,10 +97,29 @@ function Step2({onNext, onPrev} : {
         exePath: "",
         rows: 24,
         cols: 80,
+        type: "local",
     });
     const [exePathExist, setExePathExist] = useState<boolean>(false);
     const shells = useShells();
     const [isCustomExe, setIsCustomExe] = useState(false);
+    const [sshConfigEntries, setSshConfigEntries] = useState<SSHHostEntry[]>([]);
+
+    useEffect(() => {
+        invoke<SSHHostEntry[]>("parse_ssh_config").then(setSshConfigEntries);
+    }, []);
+
+    const updateProfile = (updates: Partial<TerminalProfile>) => {
+        setProfile(prevState => ({ ...prevState, ...updates }));
+    };
+
+    const updateSsh = (updates: Partial<SSHConfig>) => {
+        setProfile(prevState => {
+            const ssh = { ...prevState.ssh, ...updates } as SSHConfig;
+            return { ...prevState, ssh };
+        });
+    };
+
+    const profileType = profile.type ?? "local";
 
     const selectedShellKey = useMemo(() => {
         if (isCustomExe) return CUSTOM_EXE;
@@ -110,39 +129,19 @@ function Step2({onNext, onPrev} : {
     }, [profile.exePath, shells, isCustomExe]);
 
     const onExePathChange = (value: string) => {
-        setProfile(prevState => {
-            return {
-                ...prevState,
-                exePath: value,
-            };
-        });
+        updateProfile({ exePath: value });
     };
 
     const onNameChange = (value: string) => {
-        setProfile(prevState => {
-            return {
-                ...prevState,
-                name: value,
-            };
-        });
+        updateProfile({ name: value });
     };
 
     const onRowChange = (value: string) => {
-        setProfile(prevState => {
-            return {
-                ...prevState,
-                rows: +value,
-            };
-        });
+        updateProfile({ rows: +value });
     };
 
     const onColumnChange = (value: string) => {
-        setProfile(prevState => {
-            return {
-                ...prevState,
-                cols: +value,
-            };
-        });
+        updateProfile({ cols: +value });
     };
 
     const selectExePath = async () => {
@@ -159,9 +158,12 @@ function Step2({onNext, onPrev} : {
     };
 
     const checkCanNext = useCallback(() => {
-        let flag = profile.cols && profile.rows && profile.name && profile.exePath;
-        return flag && exePathExist;
-    }, [profile, exePathExist]);
+        if (!profile.name || !profile.cols || !profile.rows) return false;
+        if (profileType === "remote") {
+            return !!(profile.ssh?.host);
+        }
+        return !!(profile.exePath && exePathExist);
+    }, [profile, exePathExist, profileType]);
 
     const handleNext = useCallback(() => {
         if (checkCanNext()) {
@@ -170,6 +172,10 @@ function Step2({onNext, onPrev} : {
     }, [profile, checkCanNext]);
 
     useEffect(() => {
+        if (profileType === "remote") {
+            setExePathExist(true);
+            return;
+        }
         if (profile.exePath.length === 0) {
             setExePathExist(true);
         } else {
@@ -177,7 +183,7 @@ function Step2({onNext, onPrev} : {
                 setExePathExist(value);
             });
         }
-    }, [profile]);
+    }, [profile.exePath, profileType]);
 
     return (
         <Card
@@ -215,6 +221,7 @@ function Step2({onNext, onPrev} : {
                             />
                         </div>
                     </div>
+                    {profileType === "local" && (
                     <div className="flex flex-col gap-1 w-full">
                         <Label htmlFor="input-exe-path" isRequired>{t["Exe Path"]}</Label>
                         <Select
@@ -274,6 +281,146 @@ function Step2({onNext, onPrev} : {
                             {exePathExist ? " " : t["File not exist"]}
                         </span>
                     </div>
+                    )}
+
+                    {/* Profile Type */}
+                    <div className="flex flex-col gap-1 w-full">
+                        <Label>{t["Profile Type"]}</Label>
+                        <Select
+                            selectedKey={profileType}
+                            onSelectionChange={(key) => {
+                                const newType = key as "local" | "remote";
+                                updateProfile({
+                                    type: newType,
+                                    ssh: newType === "remote" ? (profile.ssh ?? { host: "", port: 22 }) : undefined,
+                                    exePath: newType === "remote" ? "" : profile.exePath,
+                                });
+                            }}
+                        >
+                            <Select.Trigger>
+                                <Select.Value />
+                                <Select.Indicator />
+                            </Select.Trigger>
+                            <Select.Popover>
+                                <ListBox>
+                                    <ListBox.Item id="local" key="local" textValue="Local">
+                                        {t["Local"]}
+                                    </ListBox.Item>
+                                    <ListBox.Item id="remote" key="remote" textValue="Remote (SSH)">
+                                        {t["Remote (SSH)"]}
+                                    </ListBox.Item>
+                                </ListBox>
+                            </Select.Popover>
+                        </Select>
+                    </div>
+
+                    {/* SSH Config Fields */}
+                    {profileType === "remote" && (
+                        <div className="flex flex-col gap-3 w-full">
+                            {/* Import from .ssh/config */}
+                            {sshConfigEntries.length > 0 && (
+                                <div className="flex flex-col gap-1">
+                                    <Label>{t["Import from SSH Config"]}</Label>
+                                    <Select
+                                        onSelectionChange={(key) => {
+                                            const entry = sshConfigEntries.find(e => e.host === key);
+                                            if (entry) {
+                                                updateSsh(entry.config);
+                                                updateProfile({ name: entry.host });
+                                            }
+                                        }}
+                                    >
+                                        <Select.Trigger>
+                                            <Select.Value />
+                                            <Select.Indicator />
+                                        </Select.Trigger>
+                                        <Select.Popover>
+                                            <ListBox>
+                                                {sshConfigEntries.map((entry) => (
+                                                    <ListBox.Item
+                                                        id={entry.host}
+                                                        key={entry.host}
+                                                        textValue={entry.host}
+                                                    >
+                                                        <div className="flex flex-col">
+                                                            <span>{entry.host}</span>
+                                                            <span className="text-xs text-muted">
+                                                                {entry.config.user ? `${entry.config.user}@` : ""}{entry.config.host}{entry.config.port ? `:${entry.config.port}` : ""}
+                                                            </span>
+                                                        </div>
+                                                    </ListBox.Item>
+                                                ))}
+                                            </ListBox>
+                                        </Select.Popover>
+                                    </Select>
+                                </div>
+                            )}
+
+                            <div className="flex flex-col gap-1">
+                                <Label htmlFor="wizard-ssh-host" isRequired>{t["Host"]}</Label>
+                                <Input
+                                    id="wizard-ssh-host"
+                                    variant="secondary"
+                                    required
+                                    value={profile.ssh?.host ?? ""}
+                                    onChange={(e) => updateSsh({ host: e.target.value })}
+                                    placeholder="e.g. 192.168.1.100 or example.com"
+                                />
+                            </div>
+                            <div className="flex flex-row gap-4">
+                                <div className="flex flex-col gap-1">
+                                    <Label htmlFor="wizard-ssh-port">{t["Port"]}</Label>
+                                    <Input
+                                        id="wizard-ssh-port"
+                                        variant="secondary"
+                                        type="number"
+                                        min={1}
+                                        max={65535}
+                                        value={String(profile.ssh?.port ?? 22)}
+                                        onChange={(e) => updateSsh({ port: e.target.value ? Math.max(1, +e.target.value || 22) : undefined })}
+                                        className="w-28"
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <Label htmlFor="wizard-ssh-user">{t["User"]}</Label>
+                                    <Input
+                                        id="wizard-ssh-user"
+                                        variant="secondary"
+                                        value={profile.ssh?.user ?? ""}
+                                        onChange={(e) => updateSsh({ user: e.target.value || undefined })}
+                                        className="w-48"
+                                        placeholder="e.g. root"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <Label htmlFor="wizard-ssh-identity-file">{t["Identity File"]}</Label>
+                                <div className="flex flex-row gap-2">
+                                    <Input
+                                        id="wizard-ssh-identity-file"
+                                        variant="secondary"
+                                        value={profile.ssh?.identityFile ?? ""}
+                                        onChange={(e) => updateSsh({ identityFile: e.target.value || undefined })}
+                                        className="flex-1"
+                                        placeholder="e.g. ~/.ssh/id_ed25519"
+                                    />
+                                    <Button
+                                        variant="secondary"
+                                        onClick={async () => {
+                                            const file = await open({
+                                                multiple: false,
+                                                directory: false,
+                                                filters: [{ name: "All Files", extensions: ["*"] }],
+                                            });
+                                            if (file) updateSsh({ identityFile: file });
+                                        }}
+                                    >
+                                        {t["Select"]}
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </Card.Content>
             <Card.Footer className="flex w-full justify-between">
