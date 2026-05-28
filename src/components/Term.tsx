@@ -9,12 +9,14 @@ import {getCurrentWindow, LogicalSize} from "@tauri-apps/api/window";
 import {parseProfilePadding, parseProfileTheme} from "../lib/term.ts";
 import {loadBindings, parseBindings} from "../lib/bindings.ts";
 import {Actions} from "../types/config.ts";
-import {openConfigFile} from "../lib/utils.ts";
+import {isMacOS, openConfigFile} from "../lib/utils.ts";
 import {useGlobalConfig} from "../hooks/config.tsx";
 import {useI18n} from "../hooks/i18n.tsx";
 import { info, debug } from "@tauri-apps/plugin-log";
 import {getCurrentWebview} from "@tauri-apps/api/webview";
 import {usePaddingOffset} from "../hooks/paddingOffset.ts";
+import {WebLinksAddon} from "@xterm/addon-web-links/src/WebLinksAddon.ts";
+import {openUrl} from "@tauri-apps/plugin-opener";
 
 let hasAppliedInitialWindowSize = false;
 
@@ -165,6 +167,13 @@ export default function Term(props : TermProps) {
         parseProfileTheme(profile).then((theme) => {
             term.current!.options.theme = theme;
         });
+
+        const webLinksAddon = new WebLinksAddon((event, uri) => {
+            if ((event.metaKey && isMacOS()) || event.ctrlKey) {
+                openUrl(uri).then();
+            }
+        });
+        term.current.loadAddon(webLinksAddon);
 
         const fitAddon = new FitAddon();
         term.current.loadAddon(fitAddon);
