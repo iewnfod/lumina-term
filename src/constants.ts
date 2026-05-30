@@ -1,5 +1,6 @@
 import {ITheme} from "@xterm/xterm";
 import {Binding, GlobalConfig} from "./types/config.ts";
+import {IImageAddonOptions} from "@xterm/addon-image";
 
 export const DEFAULT_TERMINAL_THEME: ITheme = {
     background: "#000000",
@@ -118,3 +119,16 @@ export const DEFAULT_CONFIG: GlobalConfig = {
 export const SETTINGS_TAB_ID = "__lum__settings__";
 
 export const ABOUT_TAB_ID = "__lum__about__";
+
+export const IMAGE_ADDON_SETTINGS: IImageAddonOptions = {
+    enableSizeReports: true,    // whether to enable CSI t reports (see below)
+    pixelLimit: 16777216,       // max. pixel size of a single image
+    sixelSupport: true,         // enable sixel support
+    sixelScrolling: true,       // whether to scroll on image output
+    sixelPaletteLimit: 4096,    // initial sixel palette size
+    sixelSizeLimit: 33554432,   // size limit of a single sixel sequence
+    storageLimit: 128,          // FIFO storage limit in MB
+    showPlaceholder: true,      // whether to show a placeholder for evicted images
+    iipSupport: true,           // enable iTerm IIP support
+    iipSizeLimit: 33554432,     // size limit of a single IIP sequence
+}

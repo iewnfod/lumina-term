@@ -139,6 +139,42 @@ pub fn find_shells() -> Vec<String> {
                 shells.push(p.to_string_lossy().to_string());
             }
         }
+
+        // Scan MSYS2 directories
+        let msys2_roots = [
+            r"C:\msys64",
+            r"C:\msys2",
+        ];
+        // Also check Scoop-installed MSYS2
+        let scoop_msys2 = std::env::var("USERPROFILE")
+            .map(|home| PathBuf::from(home).join(r"scoop\apps\msys2\current"))
+            .ok();
+
+        let shell_names = ["bash.exe", "zsh.exe", "fish.exe", "sh.exe"];
+
+        for root in &msys2_roots {
+            let usr_bin = PathBuf::from(root).join(r"usr\bin");
+            if usr_bin.is_dir() {
+                for name in &shell_names {
+                    let full = usr_bin.join(name);
+                    if full.is_file() && !shells.contains(&full.to_string_lossy().to_string()) {
+                        shells.push(full.to_string_lossy().to_string());
+                    }
+                }
+            }
+        }
+
+        if let Some(ref scoop_path) = scoop_msys2 {
+            let usr_bin = scoop_path.join(r"usr\bin");
+            if usr_bin.is_dir() {
+                for name in &shell_names {
+                    let full = usr_bin.join(name);
+                    if full.is_file() && !shells.contains(&full.to_string_lossy().to_string()) {
+                        shells.push(full.to_string_lossy().to_string());
+                    }
+                }
+            }
+        }
     }
 
     #[cfg(not(target_os = "windows"))]

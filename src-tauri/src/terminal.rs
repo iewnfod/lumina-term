@@ -63,6 +63,8 @@ pub fn start_terminal(
         }
         if let Some(ref identity_file) = ssh.identity_file {
             c.args(&["-i", identity_file]);
+        } else {
+            c.args(&["-o", "PubkeyAuthentication=no", "-o", "PreferredAuthentications=password"]);
         }
         c.env("TERM", "xterm-256color");
         c

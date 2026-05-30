@@ -15,8 +15,10 @@ import {useI18n} from "../hooks/i18n.tsx";
 import { info, debug } from "@tauri-apps/plugin-log";
 import {getCurrentWebview} from "@tauri-apps/api/webview";
 import {usePaddingOffset} from "../hooks/paddingOffset.ts";
-import {WebLinksAddon} from "@xterm/addon-web-links/src/WebLinksAddon.ts";
+import {WebLinksAddon} from "@xterm/addon-web-links";
 import {openUrl} from "@tauri-apps/plugin-opener";
+import {ImageAddon} from "@xterm/addon-image";
+import {IMAGE_ADDON_SETTINGS} from "../constants.ts";
 
 let hasAppliedInitialWindowSize = false;
 
@@ -174,6 +176,9 @@ export default function Term(props : TermProps) {
             }
         });
         term.current.loadAddon(webLinksAddon);
+
+        const imageAddon = new ImageAddon(IMAGE_ADDON_SETTINGS);
+        term.current.loadAddon(imageAddon);
 
         const fitAddon = new FitAddon();
         term.current.loadAddon(fitAddon);
